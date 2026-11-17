@@ -13,8 +13,10 @@ type HistoryImportState = {
   busy: boolean
   /** 用户暂停了正在进行的导入 */
   paused: boolean
-  /** 用户已点取消，等待导入循环响应 */
+  /** 已点取消，等待导入循环响应 */
   cancelling: boolean
+  /** 正在导入的文件大小（字节），读取阶段用于提示 */
+  fileSize: number | null
   /** 已读取字节占文件的比例，0–1；非导入中为 null */
   progress: number | null
   status: SettingStatus
@@ -37,6 +39,7 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
   busy: false,
   paused: false,
   cancelling: false,
+  fileSize: null,
   progress: null,
   status: null,
 
@@ -79,6 +82,7 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
       busy: true,
       paused: false,
       cancelling: false,
+      fileSize: file.size,
       progress: 0,
       status: { key: 'historyImporting' },
     })
@@ -107,7 +111,7 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
     } finally {
       importing = false
       control = null
-      set({ busy: false, paused: false, cancelling: false, progress: null })
+      set({ busy: false, paused: false, cancelling: false, fileSize: null, progress: null })
     }
   },
 }))

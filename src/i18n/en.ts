@@ -387,6 +387,7 @@ export const en = {
     'Supports ZIP files exported from DeepSeek. Imported chats are appended and existing chats stay unchanged.',
   historyImporting: 'Importing...',
   historyImportReading: 'Reading file...',
+  historyImportReadingSize: 'Reading file ({size})...',
   historyImportPause: 'Pause',
   historyImportResume: 'Resume',
   historyImportPaused: 'Paused',

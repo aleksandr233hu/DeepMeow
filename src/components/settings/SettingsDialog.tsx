@@ -20,6 +20,7 @@ import {
 } from '../../services/chat/backup.js'
 import { useIsMobile } from '../../app/viewport.js'
 import { useChatStore } from '../../services/chat/store.js'
+import { formatSize } from '../../services/attachments.js'
 import { regionCodes, getRegionName, provinces } from '../../services/location.js'
 import {
   isChineseBrowser,
@@ -610,6 +611,19 @@ const ImportHistory = ({ disabled }: { disabled: boolean }) => {
   // 条目读完后进入合并事务，结束前不能取消，避免事务中途中止
   const merging = historyImport.busy && !historyImport.paused && percent >= 100
   const locked = historyImport.cancelling || merging
+  const sizeLabel = historyImport.fileSize ? formatSize(historyImport.fileSize) : null
+  // 读取阶段带上文件大小：手机上大文件首次读取要复制，用户能理解为什么停在这一步
+  const statusText = historyImport.cancelling
+    ? t('historyImportCancelling')
+    : historyImport.paused
+      ? `${t('historyImportPaused')} ${percent}%`
+      : loading
+        ? sizeLabel
+          ? t('historyImportReadingSize', { size: sizeLabel })
+          : t('historyImportReading')
+        : merging
+          ? t('historyImportMerging')
+          : `${t('historyImporting')} ${percent}%`
 
   return (
     <>
@@ -661,17 +675,7 @@ const ImportHistory = ({ disabled }: { disabled: boolean }) => {
             />
           </div>
           <div className={styles.importProgressRow}>
-            <span className={styles.importProgressText}>
-              {historyImport.cancelling
-                ? t('historyImportCancelling')
-                : historyImport.paused
-                  ? `${t('historyImportPaused')} ${percent}%`
-                  : loading
-                    ? t('historyImportReading')
-                    : merging
-                      ? t('historyImportMerging')
-                      : `${t('historyImporting')} ${percent}%`}
-            </span>
+            <span className={styles.importProgressText}>{statusText}</span>
             <div className={styles.importProgressActions}>
               <Button
                 variant="outlined"

@@ -1,6 +1,7 @@
 import * as db from '../db.js'
 import { BackupError, fail } from './errors.js'
 import type { ImportControl } from './importControl.js'
+import type { Session } from '../types.js'
 import type { SessionIndexEntry } from './format.js'
 import { INDEX_PATH, MANIFEST_PATH, USER_PATH, parseSessionPath, sessionFilesDir } from './paths.js'
 import { checkManifest, readSessionFile, readSessionIndex } from './schema.js'
@@ -51,11 +52,15 @@ const readJson = async (entry: ArchiveEntry): Promise<unknown> => {
   }
 }
 
+/** 暂存写入的批量大小：手机 WebView 的事务开销远大于桌面，合并写入能显著提速。 */
+const SESSION_BATCH_SIZE = 25
+const FILE_BATCH_SIZE = 8
+
 /**
  * 流式导入：manifest → user（不导入）→ 全部会话 JSON → index → 全部图片。
  * 也支持会话与图片交错排列、index 位于末尾的条目顺序。
- * 会话读完立即暂存，只保留图片路径映射；图片全部读完后逐会话回填 MIME，不改变图片身份。
- * 写入导入暂存存储；调用方负责先清空暂存，成功后替换正式数据，失败时清理暂存。
+ * 会话按批写入暂存，只保留图片路径映射；图片全部读完后逐会话回填 MIME，不改变图片身份。
+ * 调用方负责先清空暂存，成功后替换正式数据，失败时清理暂存。
  */
 export const importArchive = async (
   file: File,
@@ -69,9 +74,22 @@ export const importArchive = async (
   const images = new Map<string, string>()
   /** 已保存的原件：文件 ID → MIME。同一图片出现在多个会话目录时只保存一次。 */
   const stored = new Map<string, string>()
+  const pendingSessions: Session[] = []
+  const pendingFiles: db.StoredFile[] = []
   let manifest = false
   let index: SessionIndexEntry[] | undefined
   let currentSessionId: string | undefined
+
+  const flushSessions = async () => {
+    if (pendingSessions.length > 0) {
+      await db.addStagingSessions(pendingSessions.splice(0))
+    }
+  }
+  const flushFiles = async () => {
+    if (pendingFiles.length > 0) {
+      await db.saveStagingFiles(pendingFiles.splice(0))
+    }
+  }
 
   const saveImage = async (entry: ArchiveEntry, id: string) => {
     if (stored.has(id)) {
@@ -80,7 +98,10 @@ export const importArchive = async (
     }
     const data = await readEntry(entry)
     const type = imageType(new Uint8Array(await data.slice(0, 16).arrayBuffer()))
-    await db.saveStagingFiles([{ id, blob: new Blob([data], { type }) }])
+    pendingFiles.push({ id, blob: new Blob([data], { type }) })
+    if (pendingFiles.length >= FILE_BATCH_SIZE) {
+      await flushFiles()
+    }
     stored.set(id, type)
   }
 
@@ -109,7 +130,10 @@ export const importArchive = async (
         for (const [imagePath, id] of local.images) {
           images.set(imagePath, id)
         }
-        await db.addStagingSession(local.session)
+        pendingSessions.push(local.session)
+        if (pendingSessions.length >= SESSION_BATCH_SIZE) {
+          await flushSessions()
+        }
       } else if (path === INDEX_PATH && !index) {
         index = readSessionIndex(await readJson(entry))
       } else if (
@@ -140,5 +164,8 @@ export const importArchive = async (
   ) {
     fail('backupIncomplete')
   }
+  // 写入剩余的批量数据，再按会话回填图片 MIME。
+  await flushSessions()
+  await flushFiles()
   await db.updateStagingFileTypes(stored)
 }
