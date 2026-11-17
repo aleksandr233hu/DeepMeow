@@ -1,0 +1,24 @@
+declare const styles: {
+  readonly "message": string;
+  readonly "withAvatar": string;
+  readonly "avatarSlot": string;
+  readonly "bubbleLayout": string;
+  readonly "answerBubble": string;
+  readonly "actions": string;
+  readonly "waiting": string;
+  readonly "waitingDot": string;
+  readonly "fading": string;
+  readonly "notice": string;
+  readonly "noticeAction": string;
+  readonly "bottom": string;
+  readonly "alwaysShow": string;
+  readonly "edited": string;
+  readonly "editor": string;
+  readonly "textarea": string;
+  readonly "editorActions": string;
+  readonly "continueButton": string;
+  readonly "summary": string;
+  readonly "summaryActive": string;
+};
+export = styles;
+

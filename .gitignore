@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+.pnpm-store/
+.cache/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+tmp/
+release/
+
+# 私人素材：仅本地保留，不进入仓库
+resources/app-icon-source.jpg

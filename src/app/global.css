@@ -1,0 +1,183 @@
+@font-face {
+  font-family: 'DeepMeow Round';
+  src: url('../assets/fonts/DeepMeowRound.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --message-list-max-width: 840px;
+  --message-list-padding-horizontal: 44px;
+  --app-font-scale: 1;
+  --app-bubble-inset: 88px;
+  --app-paw-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='%236F8093' fill-opacity='.12'%3E%3Cellipse cx='24' cy='31' rx='8' ry='7'/%3E%3Cellipse cx='11' cy='21' rx='4' ry='5'/%3E%3Cellipse cx='19' cy='14' rx='4' ry='5'/%3E%3Cellipse cx='29' cy='14' rx='4' ry='5'/%3E%3Cellipse cx='37' cy='21' rx='4' ry='5'/%3E%3C/g%3E%3C/svg%3E");
+  --app-paw-pattern-soft: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='%236F8093' fill-opacity='.055'%3E%3Cellipse cx='24' cy='31' rx='8' ry='7'/%3E%3Cellipse cx='11' cy='21' rx='4' ry='5'/%3E%3Cellipse cx='19' cy='14' rx='4' ry='5'/%3E%3Cellipse cx='29' cy='14' rx='4' ry='5'/%3E%3Cellipse cx='37' cy='21' rx='4' ry='5'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* 英短蓝猫主题：蓝灰、奶油白、金色眼睛；作为默认主题 */
+body {
+  --dsw-font-family: 'DeepMeow Round', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Microsoft YaHei', sans-serif;
+  --dsw-alias-bg-base: #faf7f2;
+  --dsw-alias-bg-layer-2: #f2ede4;
+  --dsw-alias-bg-layer-3: #e8e1d5;
+  --dsw-alias-bg-skeleton: #ece6dc;
+  --dsw-alias-label-primary: #2c2f34;
+  --dsw-alias-label-secondary: #5b626c;
+  --dsw-alias-label-tertiary: #8a8f98;
+  --dsw-alias-label-caption: #a0a4ab;
+  --dsw-alias-border-l1: #e6ded1;
+  --dsw-alias-border-l2: #ddd3c4;
+  --dsw-alias-border-l3: #cfc4b3;
+  --dsw-specific-bubble: #e7edf2;
+  --dsw-specific-input-major: #fffdf9;
+  --dsw-specific-menu: #fffdf9;
+  --dsw-specific-selector: #efe9df;
+  --dsw-specific-sidebar-fill: #f3eee5;
+  --dsw-alias-interactive-bg-hover: rgba(111, 128, 147, 0.1);
+  --dsw-alias-interactive-bg-hover-accent: rgba(111, 128, 147, 0.16);
+  --dsw-alias-brand-primary: #6f8093;
+  --dsw-alias-brand-text: #566678;
+  --dsw-alias-button-primary-fill: #6f8093;
+  --dsw-alias-button-primary-hover: #5d6e81;
+  --dsw-alias-button-elevated-fill: #fffdf9;
+}
+
+body[data-ds-dark-theme] {
+  --dsw-alias-bg-base: #1d2025;
+  --dsw-alias-bg-layer-2: #262a30;
+  --dsw-alias-bg-layer-3: #31363d;
+  --dsw-alias-bg-skeleton: #2b2f36;
+  --dsw-alias-label-primary: #f1ede6;
+  --dsw-alias-label-secondary: #c2c7cf;
+  --dsw-alias-label-tertiary: #8f959f;
+  --dsw-alias-label-caption: #767d87;
+  --dsw-alias-border-l1: #333840;
+  --dsw-alias-border-l2: #3d434c;
+  --dsw-alias-border-l3: #4a515b;
+  --dsw-specific-bubble: #2f3944;
+  --dsw-specific-input-major: #23272d;
+  --dsw-specific-menu: #2a2e35;
+  --dsw-specific-selector: #31363d;
+  --dsw-specific-sidebar-fill: #202329;
+  --dsw-alias-interactive-bg-hover: rgba(143, 163, 184, 0.12);
+  --dsw-alias-interactive-bg-hover-accent: rgba(143, 163, 184, 0.18);
+  --dsw-alias-brand-primary: #8fa3b8;
+  --dsw-alias-brand-text: #a9bccd;
+  --dsw-alias-button-primary-fill: #8fa3b8;
+  --dsw-alias-button-primary-hover: #7c91a8;
+  --dsw-alias-button-elevated-fill: #2a2e35;
+}
+
+/* 消息字号随外观设置缩放；标题等由 Markdown 自身样式控制 */
+body .ds-assistant-message-main-content {
+  font-size: calc(16px * var(--app-font-scale, 1));
+  line-height: calc(28px * var(--app-font-scale, 1));
+}
+
+/* 强调色：覆盖品牌主色与主按钮，深浅色各取一档保证可读性 */
+body[data-app-accent='blue'] {
+  --dsw-alias-brand-primary: #4d6bfe;
+  --dsw-alias-brand-text: #3552e8;
+  --dsw-alias-button-primary-fill: #4d6bfe;
+  --dsw-alias-button-primary-hover: #3b5ce0;
+}
+
+body[data-ds-dark-theme][data-app-accent='blue'] {
+  --dsw-alias-brand-text: #8ea2ff;
+}
+
+body[data-app-accent='green'] {
+  --dsw-alias-brand-primary: #10a37f;
+  --dsw-alias-brand-text: #0b7f63;
+  --dsw-alias-button-primary-fill: #10a37f;
+  --dsw-alias-button-primary-hover: #0d8a6c;
+}
+
+body[data-ds-dark-theme][data-app-accent='green'] {
+  --dsw-alias-brand-text: #3dd6ad;
+}
+
+body[data-app-accent='purple'] {
+  --dsw-alias-brand-primary: #8b5cf6;
+  --dsw-alias-brand-text: #7343e8;
+  --dsw-alias-button-primary-fill: #8b5cf6;
+  --dsw-alias-button-primary-hover: #7a49ea;
+}
+
+body[data-ds-dark-theme][data-app-accent='purple'] {
+  --dsw-alias-brand-text: #b49cff;
+}
+
+body[data-app-accent='orange'] {
+  --dsw-alias-brand-primary: #f59e0b;
+  --dsw-alias-brand-text: #b45309;
+  --dsw-alias-button-primary-fill: #f59e0b;
+  --dsw-alias-button-primary-hover: #d98806;
+}
+
+body[data-ds-dark-theme][data-app-accent='orange'] {
+  --dsw-alias-brand-text: #ffc34d;
+}
+
+body[data-app-accent='rose'] {
+  --dsw-alias-brand-primary: #e11d48;
+  --dsw-alias-brand-text: #be123c;
+  --dsw-alias-button-primary-fill: #e11d48;
+  --dsw-alias-button-primary-hover: #c81a40;
+}
+
+body[data-ds-dark-theme][data-app-accent='rose'] {
+  --dsw-alias-brand-text: #ff6b8a;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --message-list-max-width: 712px;
+    --message-list-padding-horizontal: 36px;
+  }
+}
+
+body {
+  overflow: hidden;
+  margin: 0;
+  word-break: break-word;
+  font-family: var(--dsw-font-family);
+  font-size: var(--ds-font-size-m);
+  color: var(--dsw-alias-label-primary);
+  background-color: var(--dsw-alias-bg-base);
+  -webkit-text-size-adjust: none;
+  -webkit-tap-highlight-color: transparent;
+  font-feature-settings: 'kern';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --scroll-color: rgba(0, 0, 0, 0.08);
+  --scroll-color-hover: rgba(0, 0, 0, 0.15);
+}
+
+body.dark {
+  color-scheme: dark;
+}
+
+body[data-ds-dark-theme] {
+  --scroll-color: rgba(255, 255, 255, 0.15);
+  --scroll-color-hover: rgba(255, 255, 255, 0.24);
+}
+
+body.change-theme *,
+body.change-theme *::before,
+body.change-theme *::after {
+  transition: none !important;
+}
+
+@media not all and (min-width: 768px) {
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior-y: none;
+  }
+}

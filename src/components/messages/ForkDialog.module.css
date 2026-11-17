@@ -1,0 +1,124 @@
+.dialog {
+  width: 760px;
+  max-width: calc(100vw - 32px);
+}
+
+.description {
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.selectAll {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+}
+
+.checkbox {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--dsw-alias-brand-primary);
+  cursor: pointer;
+}
+
+.list {
+  max-height: min(60vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.round {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 4px 14px 0;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.content {
+  min-width: 0;
+  flex: 1;
+}
+
+.user {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.files {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.target {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 100px;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 400;
+  color: var(--dsw-alias-brand-text);
+  background-color: var(--dsw-alias-button-ghost-active-fill);
+}
+
+.assistant {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 21px;
+  color: var(--dsw-alias-label-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.empty {
+  padding: 24px 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.count {
+  font-size: 13px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+@media not all and (min-width: 768px) {
+  .dialog {
+    width: 100%;
+    max-width: none;
+  }
+
+  .list {
+    max-height: calc(var(--app-viewport-height, 100dvh) - 260px);
+  }
+}

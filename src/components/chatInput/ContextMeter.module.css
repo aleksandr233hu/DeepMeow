@@ -1,0 +1,146 @@
+.meter {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px 0 4px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--dsw-alias-interactive-bg-hover);
+  }
+}
+
+.ring {
+  flex-shrink: 0;
+  color: var(--dsw-alias-brand-primary);
+}
+
+.track,
+.progress {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.track {
+  stroke: var(--dsw-alias-border-l2);
+}
+
+.progress {
+  stroke: currentColor;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.3s var(--ds-ease-in-out);
+}
+
+.warn {
+  color: var(--dsw-static-amber-600);
+}
+
+.danger {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.text {
+  white-space: nowrap;
+}
+
+.dialog {
+  width: 440px;
+  max-width: calc(100vw - 32px);
+}
+
+.summary {
+  text-align: center;
+}
+
+.big {
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+.limit {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.source {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.bar {
+  height: 6px;
+  margin: 14px 0 16px;
+  border-radius: 3px;
+  background-color: var(--dsw-alias-bg-layer-2);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 3px;
+  background-color: var(--dsw-alias-brand-primary);
+  transition: width 0.3s var(--ds-ease-in-out);
+}
+
+.rows {
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 0;
+  border-top: 1px solid var(--dsw-alias-border-l2);
+
+  dt {
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--dsw-alias-label-secondary);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 13px;
+    line-height: 20px;
+    font-variant-numeric: tabular-nums;
+    color: var(--dsw-alias-label-primary);
+  }
+}
+
+.hint {
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+@media not all and (min-width: 440px) {
+  .meter {
+    padding: 0 6px 0 4px;
+  }
+}
