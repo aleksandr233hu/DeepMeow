@@ -54,8 +54,8 @@ const readJson = async (entry: ArchiveEntry): Promise<unknown> => {
 }
 
 /** 暂存写入的批量大小：手机 WebView 的事务开销远大于桌面，合并写入能显著提速。 */
-const SESSION_BATCH_SIZE = 25
-const FILE_BATCH_SIZE = 8
+const SESSION_BATCH_SIZE = 60
+const FILE_BATCH_SIZE = 16
 
 /**
  * 流式导入：manifest → user（不导入）→ 全部会话 JSON → index → 全部图片。

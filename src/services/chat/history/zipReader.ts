@@ -4,7 +4,8 @@ import type { ImportControl } from './importControl.js'
 
 const READ_CHUNK_BYTES = 256 * 1024
 // 控制每轮同步解压的工作量；输出交给调用方保存后才继续读取。
-const INFLATE_CHUNK_BYTES = 8 * 1024
+// 64KB 一次能显著减少生成器切换次数，手机上解压几千个会话时差别明显。
+const INFLATE_CHUNK_BYTES = 64 * 1024
 
 /** ZIP 结构损坏或使用了不支持的特性 */
 export class ArchiveError extends Error {
