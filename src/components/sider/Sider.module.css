@@ -157,6 +157,30 @@
   user-select: none;
 }
 
+/* 置顶分组的标题是可点击的折叠按钮，外观与普通分组标题一致 */
+.sectionToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  border: none;
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-tertiary);
+  background-color: var(--dsw-specific-sidebar-fill);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sectionChevron {
+  font-size: 10px;
+  line-height: 1;
+}
+
 .bottom {
   display: flex;
   flex-shrink: 0;

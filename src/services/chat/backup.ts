@@ -50,7 +50,7 @@ export const importHistory = (
   source: ArchiveSource,
   onProgress?: (loaded: number, total: number, sessions?: SessionProgress) => void,
   control?: ImportControl,
-  options?: { includeImages?: boolean }
+  options?: { includeImages?: boolean; compact?: boolean }
 ): Promise<{ imported: number; skipped: number }> =>
   enqueueBackup(async () => {
     const { importArchive } = await import('./history/importArchive.js')

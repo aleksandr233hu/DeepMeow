@@ -5,6 +5,7 @@ import { resolvePreset, usePresetStore } from '../../services/presets/store.js'
 import { useSettings } from '../../services/settings.js'
 import {
   compressSession,
+  setSessionPinned,
   setSessionPreset,
   type CompressResult,
 } from '../../services/chat/store.js'
@@ -116,6 +117,11 @@ export const SessionToolbar = ({
       </Menu>
       <Menu
         options={[
+          {
+            key: 'pin',
+            label: session.pinned ? t('sessionUnpin') : t('sessionPin'),
+            onSelect: () => setSessionPinned(session.id, !session.pinned),
+          },
           {
             key: 'compress',
             label: t('compressSession'),

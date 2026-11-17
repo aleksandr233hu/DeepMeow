@@ -21,7 +21,11 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
   const sessions = useChatStore((state) => state.sessions)
   const activeId = useChatStore((state) => state.activeId)
   const [now, setNow] = useState(Date.now)
-  const groups = useMemo(() => groupSessions(sessions, now, t), [sessions, now, t])
+  // 置顶会话单独成组，时间分组里不再重复出现
+  const pinnedSessions = useMemo(() => sessions.filter((session) => session.pinned), [sessions])
+  const restSessions = useMemo(() => sessions.filter((session) => !session.pinned), [sessions])
+  const groups = useMemo(() => groupSessions(restSessions, now, t), [restSessions, now, t])
+  const [pinnedOpen, setPinnedOpen] = useState(true)
   const [deleting, setDeleting] = useState<SessionSummary | null>(null)
   const [deletePending, setDeletePending] = useState(false)
 
@@ -81,6 +85,29 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
       </button>
       <div className={styles.listWrap}>
         <div className={styles.list}>
+          {pinnedSessions.length > 0 ? (
+            <div className={styles.section}>
+              <button
+                type="button"
+                className={clsx(styles.sectionHeader, styles.sectionToggle)}
+                aria-expanded={pinnedOpen}
+                onClick={() => setPinnedOpen((value) => !value)}
+              >
+                <span>{t('sessionPinnedGroup')}</span>
+                <span className={styles.sectionChevron}>{pinnedOpen ? '▾' : '▸'}</span>
+              </button>
+              {pinnedOpen
+                ? pinnedSessions.map((session) => (
+                    <SessionItem
+                      key={session.id}
+                      session={session}
+                      active={session.id === activeId}
+                      onDelete={() => setDeleting(session)}
+                    />
+                  ))
+                : null}
+            </div>
+          ) : null}
           {groups.map((group) => (
             <div key={group.key} className={styles.section}>
               <div className={styles.sectionHeader}>{group.label}</div>

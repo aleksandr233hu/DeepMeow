@@ -3,7 +3,7 @@ import { BackupError, fail } from './errors.js'
 import type { ImportControl } from './importControl.js'
 import type { ArchiveSource, SessionProgress } from './zipReader.js'
 import type { Session } from '../types.js'
-import type { SessionIndexEntry } from './format.js'
+import type { ChatMessage, Fragment, SessionIndexEntry } from './format.js'
 import { INDEX_PATH, MANIFEST_PATH, USER_PATH, parseSessionPath, sessionFilesDir } from './paths.js'
 import { checkManifest, readSessionFile, readSessionIndex } from './schema.js'
 import { toLocalSession } from './toLocal.js'
@@ -63,16 +63,49 @@ const FILE_BATCH_SIZE = 16
  * 会话按批写入暂存，只保留图片路径映射；图片全部读完后逐会话回填 MIME，不改变图片身份。
  * 调用方负责先清空暂存，成功后替换正式数据，失败时清理暂存。
  */
+/** 精简历史：去掉思考过程与网页摘要，保留搜索查询词、结果标题与链接。 */
+const compactMessages = (messages: ChatMessage[]): void => {
+  for (const message of messages) {
+    const next: Fragment[] = []
+    for (const fragment of message.fragments) {
+      switch (fragment.type) {
+        case 'THINK':
+        case 'READ_LINK':
+          break
+        case 'TOOL_SEARCH':
+          next.push({
+            ...fragment,
+            results: fragment.results.map((result) => ({ ...result, snippet: '' })),
+          })
+          break
+        case 'TOOL_IMAGE_SEARCH':
+          next.push({
+            ...fragment,
+            results: fragment.results.map((result) => ({ ...result, snippet: '' })),
+          })
+          break
+        case 'TOOL_OPEN':
+          next.push({ ...fragment, snippet: null })
+          break
+        default:
+          next.push(fragment)
+      }
+    }
+    message.fragments = next
+  }
+}
+
 export const importArchive = async (
   source: ArchiveSource,
   onProgress?: (loaded: number, total: number, sessions?: SessionProgress) => void,
   control?: ImportControl,
-  options?: { includeImages?: boolean }
+  options?: { includeImages?: boolean; compact?: boolean }
 ): Promise<void> => {
   if (!(await isZipFile(source))) {
     fail('backupUnrecognized')
   }
   const includeImages = options?.includeImages ?? true
+  const compact = options?.compact ?? false
   const imported = new Set<string>()
   const images = new Map<string, string>()
   /** 已保存的原件：文件 ID → MIME。同一图片出现在多个会话目录时只保存一次。 */
@@ -140,10 +173,14 @@ export const importArchive = async (
         // 账号信息（已脱敏）不导入；文件可能缺失。
         await skipEntry(entry)
       } else if (sessionId !== null && !index) {
-        const local = toLocalSession(readSessionFile(await readJson(entry)))
-        if (local.session.id !== sessionId || imported.has(sessionId)) {
+        const file = readSessionFile(await readJson(entry))
+        if (file.id !== sessionId || imported.has(sessionId)) {
           fail('backupIncomplete')
         }
+        if (compact) {
+          compactMessages(file.messages)
+        }
+        const local = toLocalSession(file)
         imported.add(sessionId)
         currentSessionId = sessionId
         for (const [imagePath, id] of local.images) {

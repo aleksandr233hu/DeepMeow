@@ -144,10 +144,15 @@ export type Session = {
   styleProfile?: StyleProfile
   /** 本会话的身份来源；缺省跟随全局 */
   identitySource?: IdentitySource
+  /** 侧栏置顶：只影响列表排序与分组 */
+  pinned?: boolean
 }
 
 /** 会话列表元数据；消息只在打开会话时加载。 */
-export type SessionSummary = Pick<Session, 'id' | 'title' | 'createdAt' | 'updatedAt'>
+export type SessionSummary = Pick<
+  Session,
+  'id' | 'title' | 'createdAt' | 'updatedAt' | 'pinned'
+>
 
 /** 显式提取字段，避免将完整会话的消息带进列表。 */
 export const toSessionSummary = (session: SessionSummary): SessionSummary => ({
@@ -155,4 +160,5 @@ export const toSessionSummary = (session: SessionSummary): SessionSummary => ({
   title: session.title,
   createdAt: session.createdAt,
   updatedAt: session.updatedAt,
+  pinned: session.pinned ?? false,
 })

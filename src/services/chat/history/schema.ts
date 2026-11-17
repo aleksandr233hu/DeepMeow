@@ -277,5 +277,9 @@ export const readSessionFile: Read<SessionFile> = (value) => {
   time(item.inserted_at)
   time(item.updated_at)
   const messages = list(message)(item.messages)
-  return { ...item, pinned: false, messages } as unknown as SessionFile
+  return {
+    ...item,
+    pinned: item.pinned === true,
+    messages,
+  } as unknown as SessionFile
 }

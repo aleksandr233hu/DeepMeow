@@ -373,6 +373,11 @@ export const zh = {
   historyImportIncludeImages: '包含图片附件',
   historyImportIncludeImagesDescription:
     '关闭后只导入对话文字，速度快很多；图片位置仍保留文件名。',
+  historyImportCompact: '精简历史',
+  historyImportCompactDescription: '跳过思考过程与网页摘要，只保留正文和搜索链接，导入更快。',
+  sessionPinnedGroup: '置顶',
+  sessionPin: '置顶',
+  sessionUnpin: '取消置顶',
   historyImportDescription:
     '支持 DeepSeek 导出的 ZIP 文件；导入的对话会追加到现有对话之后，不会覆盖已有对话。',
   historyImporting: '正在导入...',

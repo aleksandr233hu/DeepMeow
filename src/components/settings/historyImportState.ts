@@ -14,6 +14,8 @@ type HistoryImportState = {
   file: ImportPick | null
   /** 导入时是否包含图片附件；关闭后只导入对话文字 */
   includeImages: boolean
+  /** 精简历史：跳过思考过程与网页摘要，只留正文与搜索链接 */
+  compact: boolean
   busy: boolean
   /** 用户暂停了正在进行的导入 */
   paused: boolean
@@ -28,6 +30,7 @@ type HistoryImportState = {
   status: SettingStatus
   select: (pick: ImportPick) => void
   setIncludeImages: (includeImages: boolean) => void
+  setCompact: (compact: boolean) => void
   cancel: () => void
   confirm: () => Promise<void>
   pause: () => void
@@ -44,6 +47,7 @@ let control: ImportControl | null = null
 export const useHistoryImport = create<HistoryImportState>((set, get) => ({
   file: null,
   includeImages: true,
+  compact: false,
   busy: false,
   paused: false,
   cancelling: false,
@@ -61,6 +65,8 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
   },
 
   setIncludeImages: (includeImages) => set({ includeImages }),
+
+  setCompact: (compact) => set({ compact }),
 
   cancel: () => {
     get().file?.release?.()
@@ -117,7 +123,7 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
           }))
         },
         current,
-        { includeImages: get().includeImages }
+        { includeImages: get().includeImages, compact: get().compact }
       )
       set({
         status:

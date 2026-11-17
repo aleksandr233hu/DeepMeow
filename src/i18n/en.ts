@@ -386,6 +386,12 @@ export const en = {
   historyImportIncludeImages: 'Include image attachments',
   historyImportIncludeImagesDescription:
     'Turn off to import text only, which is much faster; image names are still kept.',
+  historyImportCompact: 'Compact history',
+  historyImportCompactDescription:
+    'Skips reasoning and web snippets, keeping replies and search links. Faster to import.',
+  sessionPinnedGroup: 'Pinned',
+  sessionPin: 'Pin',
+  sessionUnpin: 'Unpin',
   historyImportDescription:
     'Supports ZIP files exported from DeepSeek. Imported chats are appended and existing chats stay unchanged.',
   historyImporting: 'Importing...',

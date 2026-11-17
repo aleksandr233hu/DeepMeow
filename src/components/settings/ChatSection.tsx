@@ -101,6 +101,8 @@ export const ChatSection = () => {
           />
         }
       />
+      <AvatarSettings />
+      {/* 头像总开关放在自定义头像旁边：选「不显示」时两侧头像一起隐藏 */}
       <SettingCell
         label={t('showAvatars')}
         description={t('showAvatarsDescription')}
@@ -109,7 +111,6 @@ export const ChatSection = () => {
           <Toggle checked={showAvatars} label={t('showAvatars')} onChange={setShowAvatars} />
         }
       />
-      <AvatarSettings />
       <SettingCell
         label={t('showSystemPrompt')}
         description={t('showSystemPromptDescription')}

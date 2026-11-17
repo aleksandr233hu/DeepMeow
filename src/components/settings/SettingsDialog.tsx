@@ -405,6 +405,18 @@ const ImportConfirm = () => {
           onChange={historyImport.setIncludeImages}
         />
       </div>
+      {/* 思考过程与网页摘要在归档里占大头，精简后解析更快 */}
+      <div className={styles.importConfirmOption}>
+        <div className={styles.importConfirmOptionText}>
+          <div className={styles.label}>{t('historyImportCompact')}</div>
+          <div className={styles.description}>{t('historyImportCompactDescription')}</div>
+        </div>
+        <Toggle
+          checked={historyImport.compact}
+          label={t('historyImportCompact')}
+          onChange={historyImport.setCompact}
+        />
+      </div>
     </Modal>
   )
 }
