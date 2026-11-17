@@ -5,7 +5,7 @@ import type { Session } from './types.js'
 
 export { BackupError } from './history/errors.js'
 export { ImportCancelled } from './history/importControl.js'
-import type { ArchiveSource } from './history/zipReader.js'
+import type { ArchiveSource, SessionProgress } from './history/zipReader.js'
 import type { ImportControl } from './history/importControl.js'
 
 // 导入、导出与全部删除串行处理，避免读取归档时数据被清空或两个替换事务交错。
@@ -48,7 +48,7 @@ export const exportHistory = (): Promise<{ name: string; blob: Blob }> =>
  */
 export const importHistory = (
   source: ArchiveSource,
-  onProgress?: (loaded: number, total: number) => void,
+  onProgress?: (loaded: number, total: number, sessions?: SessionProgress) => void,
   control?: ImportControl,
   options?: { includeImages?: boolean }
 ): Promise<{ imported: number; skipped: number }> =>

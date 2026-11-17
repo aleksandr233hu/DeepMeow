@@ -251,21 +251,29 @@ export type ArchiveEntry = {
   stream: AsyncIterable<Uint8Array>
 }
 
+/** 已处理会话数；total 在解析中央目录后即可知，done 由导入流程递增。 */
+export type SessionProgress = { done: number; total: number }
+
+/** 归档里的会话 JSON 条目 */
+const SESSION_ENTRY = /^chat_sessions\/[^/]+\.json$/
+
 /**
  * 按条目在文件中的物理顺序逐条、逐块解压，跳过目录条目。
  * 调用方必须消费完当前条目的数据，再请求下一个条目。
  */
 export async function* readArchive(
   source: ArchiveSource,
-  onProgress?: (loaded: number, total: number) => void,
+  onProgress?: (loaded: number, total: number, sessions?: SessionProgress) => void,
   control?: ImportControl,
   shouldSkip?: (path: string) => boolean
 ): AsyncGenerator<ArchiveEntry> {
   const directory = await readDirectory(source)
   // 首次读取大文件可能要整份复制，读完目录立即给取消一次机会。
   await control?.checkpoint()
+  // 中央目录列出全部条目，会话总数此刻就能确定，供界面显示处理进度。
+  const sessionTotal = directory.entries.filter((entry) => SESSION_ENTRY.test(entry.path)).length
   // 中央目录位于文件末尾，解析完成即代表尾部字节已经读过。
-  onProgress?.(directory.offset, source.size)
+  onProgress?.(directory.offset, source.size, { done: 0, total: sessionTotal })
   for (const [index, entry] of directory.entries.entries()) {
     const boundary = directory.entries[index + 1]?.offset ?? directory.offset
     const start = await readEntryOffset(source, entry, boundary)

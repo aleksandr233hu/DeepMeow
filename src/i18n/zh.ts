@@ -376,6 +376,7 @@ export const zh = {
   historyImportDescription:
     '支持 DeepSeek 导出的 ZIP 文件；导入的对话会追加到现有对话之后，不会覆盖已有对话。',
   historyImporting: '正在导入...',
+  historyImportingSessions: '正在导入 {percent}%（{done} / {total} 个对话）',
   historyImportReading: '正在读取文件...',
   historyImportReadingSize: '正在读取文件（{size}）...',
   historyImportPause: '暂停',

@@ -628,18 +628,26 @@ const ImportHistory = ({ disabled }: { disabled: boolean }) => {
   const merging = historyImport.busy && !historyImport.paused && percent >= 100
   const locked = historyImport.cancelling || merging
   const sizeLabel = historyImport.fileSize ? formatSize(historyImport.fileSize) : null
-  // 读取阶段带上文件大小：手机上大文件首次读取要复制，用户能理解为什么停在这一步
-  const statusText = historyImport.cancelling
-    ? t('historyImportCancelling')
-    : historyImport.paused
-      ? `${t('historyImportPaused')} ${percent}%`
-      : loading
-        ? sizeLabel
-          ? t('historyImportReadingSize', { size: sizeLabel })
-          : t('historyImportReading')
-        : merging
-          ? t('historyImportMerging')
-          : `${t('historyImporting')} ${percent}%`
+  const sessions = historyImport.sessionProgress
+  // 读取阶段带上文件大小与会话计数：大文件首次读取要复制，也让用户看清处理到哪了
+  let statusText = `${t('historyImporting')} ${percent}%`
+  if (historyImport.cancelling) {
+    statusText = t('historyImportCancelling')
+  } else if (historyImport.paused) {
+    statusText = `${t('historyImportPaused')} ${percent}%`
+  } else if (loading) {
+    statusText = sizeLabel
+      ? t('historyImportReadingSize', { size: sizeLabel })
+      : t('historyImportReading')
+  } else if (merging) {
+    statusText = t('historyImportMerging')
+  } else if (sessions && sessions.total > 0) {
+    statusText = t('historyImportingSessions', {
+      percent,
+      done: sessions.done,
+      total: sessions.total,
+    })
+  }
 
   // Android 原生壳走系统选择器直读，避免几百 MB 的文件先被复制进 WebView 缓存
   const pickFile = async () => {

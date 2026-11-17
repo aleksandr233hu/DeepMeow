@@ -1,7 +1,7 @@
 import * as db from '../db.js'
 import { BackupError, fail } from './errors.js'
 import type { ImportControl } from './importControl.js'
-import type { ArchiveSource } from './zipReader.js'
+import type { ArchiveSource, SessionProgress } from './zipReader.js'
 import type { Session } from '../types.js'
 import type { SessionIndexEntry } from './format.js'
 import { INDEX_PATH, MANIFEST_PATH, USER_PATH, parseSessionPath, sessionFilesDir } from './paths.js'
@@ -65,7 +65,7 @@ const FILE_BATCH_SIZE = 16
  */
 export const importArchive = async (
   source: ArchiveSource,
-  onProgress?: (loaded: number, total: number) => void,
+  onProgress?: (loaded: number, total: number, sessions?: SessionProgress) => void,
   control?: ImportControl,
   options?: { includeImages?: boolean }
 ): Promise<void> => {
@@ -82,6 +82,16 @@ export const importArchive = async (
   let manifest = false
   let index: SessionIndexEntry[] | undefined
   let currentSessionId: string | undefined
+  // 最近一次读取位置与会话总数：处理每个会话后据此回报「已处理 N 个对话」
+  let lastLoaded = 0
+  let sessionTotal = 0
+  const report = (loaded: number, total: number, sessions?: SessionProgress) => {
+    lastLoaded = loaded
+    if (sessions) {
+      sessionTotal = sessions.total
+    }
+    onProgress?.(loaded, total, sessions)
+  }
 
   const flushSessions = async () => {
     if (pendingSessions.length > 0) {
@@ -111,7 +121,7 @@ export const importArchive = async (
   try {
     for await (const entry of readArchive(
       source,
-      onProgress,
+      report,
       control,
       // 不导入图片时连解压都跳过：图片条目按目录直接越过，只保留会话里的文件名。
       includeImages ? undefined : (path) => /^chat_sessions\/[^/]+_files\//.test(path)
@@ -140,6 +150,7 @@ export const importArchive = async (
           images.set(imagePath, id)
         }
         pendingSessions.push(local.session)
+        report(lastLoaded, source.size, { done: imported.size, total: sessionTotal })
         if (pendingSessions.length >= SESSION_BATCH_SIZE) {
           await flushSessions()
         }

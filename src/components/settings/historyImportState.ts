@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { importHistory, ImportCancelled } from '../../services/chat/backup.js'
 import { createImportControl, type ImportControl } from '../../services/chat/history/importControl.js'
 import type { ImportPick } from '../../services/chat/history/importSource.js'
+import type { SessionProgress } from '../../services/chat/history/zipReader.js'
 import type { SettingStatus } from './SettingCell.js'
 
 /**
@@ -22,6 +23,8 @@ type HistoryImportState = {
   fileSize: number | null
   /** 已读取字节占文件的比例，0–1；非导入中为 null */
   progress: number | null
+  /** 已处理 / 总数 个对话，读取阶段用于显示细粒度进度 */
+  sessionProgress: SessionProgress | null
   status: SettingStatus
   select: (pick: ImportPick) => void
   setIncludeImages: (includeImages: boolean) => void
@@ -46,6 +49,7 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
   cancelling: false,
   fileSize: null,
   progress: null,
+  sessionProgress: null,
   status: null,
 
   select: (pick) => {
@@ -100,13 +104,17 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
       cancelling: false,
       fileSize: pick.size,
       progress: 0,
+      sessionProgress: null,
       status: { key: 'historyImporting' },
     })
     try {
       const { imported, skipped } = await importHistory(
         pick.source,
-        (loaded, total) => {
-          set({ progress: total > 0 ? Math.min(1, loaded / total) : 0 })
+        (loaded, total, sessions) => {
+          set((state) => ({
+            progress: total > 0 ? Math.min(1, loaded / total) : 0,
+            sessionProgress: sessions ?? state.sessionProgress,
+          }))
         },
         current,
         { includeImages: get().includeImages }
@@ -130,7 +138,14 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
       control = null
       // 原生读取源持有文件描述符，导入结束就释放
       pick.release?.()
-      set({ busy: false, paused: false, cancelling: false, fileSize: null, progress: null })
+      set({
+        busy: false,
+        paused: false,
+        cancelling: false,
+        fileSize: null,
+        progress: null,
+        sessionProgress: null,
+      })
     }
   },
 }))
