@@ -99,12 +99,7 @@ export const SessionToolbar = ({
         options={presets.map((preset) => ({
           key: preset.id,
           label: preset.name,
-          icon:
-            preset.id === currentPreset?.id ? (
-              <IconCheckOutline16 />
-            ) : (
-              <span className={styles.emoji}>{preset.emoji}</span>
-            ),
+          icon: preset.id === currentPreset?.id ? <IconCheckOutline16 /> : undefined,
           onSelect: () => setSessionPreset(session.id, preset.id),
         }))}
       >
@@ -115,7 +110,7 @@ export const SessionToolbar = ({
             title={t(identitySource === 'agent' ? 'personaIgnoredByAgentHint' : 'choosePreset')}
             onClick={toggle}
           >
-            {currentPreset ? `${currentPreset.emoji} ${currentPreset.name}` : t('choosePreset')}
+            {currentPreset ? currentPreset.name : t('choosePreset')}
           </button>
         )}
       </Menu>

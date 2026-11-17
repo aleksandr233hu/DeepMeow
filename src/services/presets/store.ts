@@ -58,11 +58,9 @@ export const initPresets = (): Promise<void> => {
 
 export const addPreset = async ({
   name,
-  emoji,
   systemPrompt,
 }: {
   name: string
-  emoji: string
   systemPrompt: string
 }): Promise<Preset | null> => {
   const trimmedName = name.trim().slice(0, 40)
@@ -74,7 +72,8 @@ export const addPreset = async ({
   const preset: Preset = {
     id: createId(),
     name: trimmedName,
-    emoji: emoji.trim() || '✨',
+    // 预设不再使用 emoji 图标；字段保留以兼容旧数据
+    emoji: '',
     systemPrompt: trimmedPrompt,
     builtin: false,
     createdAt: now,
@@ -108,7 +107,7 @@ export const updatePreset = async (
     ...preset,
     name,
     systemPrompt,
-    emoji: (patch.emoji ?? preset.emoji).trim() || preset.emoji,
+    emoji: (patch.emoji ?? preset.emoji).trim(),
     updatedAt: Date.now(),
   }
   try {

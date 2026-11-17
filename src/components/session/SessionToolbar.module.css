@@ -45,11 +45,6 @@
   }
 }
 
-.emoji {
-  font-size: 14px;
-  line-height: 16px;
-}
-
 .mobileRow {
   display: flex;
   flex-shrink: 0;

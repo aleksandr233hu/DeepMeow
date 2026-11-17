@@ -28,14 +28,6 @@
   border-radius: 10px;
 }
 
-.emoji {
-  flex-shrink: 0;
-  width: 24px;
-  font-size: 18px;
-  line-height: 24px;
-  text-align: center;
-}
-
 .info {
   flex: 1;
   min-width: 0;
@@ -95,7 +87,6 @@
 }
 
 .input,
-.emojiInput,
 .textarea {
   box-sizing: border-box;
   padding: 7px 10px;
@@ -116,11 +107,6 @@
 .input {
   flex: 1;
   min-width: 0;
-}
-
-.emojiInput {
-  width: 56px;
-  text-align: center;
 }
 
 .textarea {

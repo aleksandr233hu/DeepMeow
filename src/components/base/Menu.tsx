@@ -7,7 +7,8 @@ import styles from './Menu.module.css'
 export type MenuOption = {
   key: string
   label: string
-  icon: ReactNode
+  /** 可选的左侧图标；省略时只显示文字 */
+  icon?: ReactNode
   danger?: boolean
   onSelect: () => void
 }
@@ -52,7 +53,7 @@ export const Menu = ({
                     option.onSelect()
                   }}
                 >
-                  <span className={styles.icon}>{option.icon}</span>
+                  {option.icon ? <span className={styles.icon}>{option.icon}</span> : null}
                   {option.label}
                 </div>
               ))}

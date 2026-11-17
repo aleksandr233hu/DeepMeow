@@ -16,7 +16,7 @@ import { showToast } from '../base/toastState.js'
 import { SettingCell } from './SettingCell.js'
 import styles from './PresetsSection.module.css'
 
-type Editor = { id: string | null; name: string; emoji: string; prompt: string }
+type Editor = { id: string | null; name: string; prompt: string }
 
 /** 人格预设管理：默认人格、新建/编辑/复制/删除，内置人格不可删除 */
 export const PresetsSection = () => {
@@ -26,9 +26,9 @@ export const PresetsSection = () => {
   const [editor, setEditor] = useState<Editor | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const startCreate = () => setEditor({ id: null, name: '', emoji: '✨', prompt: '' })
+  const startCreate = () => setEditor({ id: null, name: '', prompt: '' })
   const startEdit = (preset: Preset) =>
-    setEditor({ id: preset.id, name: preset.name, emoji: preset.emoji, prompt: preset.systemPrompt })
+    setEditor({ id: preset.id, name: preset.name, prompt: preset.systemPrompt })
 
   const save = async () => {
     if (!editor || busy) {
@@ -38,12 +38,10 @@ export const PresetsSection = () => {
     const ok = editor.id
       ? await updatePreset(editor.id, {
           name: editor.name,
-          emoji: editor.emoji,
           systemPrompt: editor.prompt,
         })
       : (await addPreset({
           name: editor.name,
-          emoji: editor.emoji,
           systemPrompt: editor.prompt,
         })) !== null
     setBusy(false)
@@ -58,7 +56,6 @@ export const PresetsSection = () => {
   const duplicate = async (preset: Preset) => {
     const created = await addPreset({
       name: `${preset.name} 副本`,
-      emoji: preset.emoji,
       systemPrompt: preset.systemPrompt,
     })
     showToast({ key: created ? 'presetSaved' : 'presetSaveFailed', type: created ? undefined : 'error' })
@@ -89,7 +86,7 @@ export const PresetsSection = () => {
               { value: '', label: t('presetFollowBuiltin') },
               ...presets.map((preset) => ({
                 value: preset.id,
-                label: `${preset.emoji} ${preset.name}`,
+                label: preset.name,
               })),
             ]}
             onChange={(value) => setDefaultPresetId(value || null)}
@@ -107,7 +104,6 @@ export const PresetsSection = () => {
       <ul className={styles.list}>
         {presets.map((preset) => (
           <li key={preset.id} className={styles.item}>
-            <span className={styles.emoji}>{preset.emoji}</span>
             <div className={styles.info}>
               <div className={styles.name}>
                 {preset.name}
@@ -149,13 +145,6 @@ export const PresetsSection = () => {
             {t(editor.id ? 'editPreset' : 'newPreset')}
           </div>
           <div className={styles.row}>
-            <input
-              className={styles.emojiInput}
-              value={editor.emoji}
-              maxLength={4}
-              aria-label={t('presetEmoji')}
-              onChange={(event) => setEditor({ ...editor, emoji: event.target.value })}
-            />
             <input
               className={styles.input}
               value={editor.name}
