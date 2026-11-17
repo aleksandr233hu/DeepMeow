@@ -10,7 +10,9 @@ import {
 } from './format.js'
 
 /**
- * 按格式定义校验，返回只含已定义字段的新对象：容器与元数据严格校验，无法解析的内容片段丢弃。
+ * 按格式定义校验：容器与元数据严格校验，无法解析的内容片段丢弃。
+ * 校验通过后就地返回原对象，只为需要修正的字段做浅拷贝——导入几百 MB 的归档时，
+ * 逐字段重建对象（每条消息、每个片段都新建）是解析阶段的主要开销。
  * 可空字段必须显式为 null；可选字段允许缺省，存在时严格校验。
  */
 
@@ -67,36 +69,41 @@ const oneOf =
 
 const tipStyle = oneOf('INFO', 'WARNING', 'CAUTION')
 const searchStatus = oneOf('WIP', 'FINISHED', 'FAILED')
-const toolMetadata = (item: Record<string, unknown>) => ({
-  ...('stage_id' in item ? { stage_id: count(item.stage_id) } : {}),
-  ...('group_id' in item ? { group_id: count(item.group_id) } : {}),
-})
+/** 校验工具元数据；就地校验只断言类型，不重建对象 */
+const checkToolMetadata = (item: Record<string, unknown>) => {
+  if ('stage_id' in item) {
+    count(item.stage_id)
+  }
+  if ('group_id' in item) {
+    count(item.group_id)
+  }
+}
 
 const searchResult: Read<SearchResult> = (value) => {
   const item = record(value)
-  return {
-    url: string(item.url),
-    title: string(item.title),
-    snippet: string(item.snippet),
-    published_at: nullable(time)(item.published_at),
-    site_name: nullable(string)(item.site_name),
-    ...('site_icon' in item ? { site_icon: nullable(string)(item.site_icon) } : {}),
+  string(item.url)
+  string(item.title)
+  string(item.snippet)
+  nullable(time)(item.published_at)
+  nullable(string)(item.site_name)
+  if ('site_icon' in item) {
+    nullable(string)(item.site_icon)
   }
+  return item as unknown as SearchResult
 }
 
 const fileEntry: Read<FileEntry> = (value) => {
   const item = record(value)
-  return {
-    id: string(item.id),
-    file_name: string(item.file_name),
-    file_size: count(item.file_size),
-    token_usage: nullable(count)(item.token_usage),
-    inserted_at: time(item.inserted_at),
-    export_path: nullable(string)(item.export_path),
-    is_image: boolean(item.is_image),
-    width: nullable(count)(item.width),
-    height: nullable(count)(item.height),
-  }
+  string(item.id)
+  string(item.file_name)
+  count(item.file_size)
+  nullable(count)(item.token_usage)
+  time(item.inserted_at)
+  nullable(string)(item.export_path)
+  boolean(item.is_image)
+  nullable(count)(item.width)
+  nullable(count)(item.height)
+  return item as unknown as FileEntry
 }
 
 const readFragment: Read<Fragment> = (value) => {
@@ -104,82 +111,86 @@ const readFragment: Read<Fragment> = (value) => {
   const type = string(item.type)
   switch (type) {
     case 'REQUEST':
-      return { type, content: string(item.content) }
     case 'RESPONSE':
-      return { type, content: string(item.content) }
     case 'TEMPLATE_RESPONSE':
-      return { type, content: string(item.content) }
+      string(item.content)
+      return item as unknown as Fragment
     case 'THINK':
-      return {
-        type,
-        content: string(item.content),
-        elapsed_secs: nullable(number)(item.elapsed_secs),
-      }
+      string(item.content)
+      nullable(number)(item.elapsed_secs)
+      return item as unknown as Fragment
     case 'TIP':
-      return { type, content: string(item.content), style: tipStyle(item.style) }
     case 'CONTENT_RISK':
-      return { type, content: string(item.content), style: tipStyle(item.style) }
+      string(item.content)
+      tipStyle(item.style)
+      return item as unknown as Fragment
     case 'PARTIAL_FILE_READ': {
       const ratio = number(item.ratio)
-      return { type, ratio: ratio >= 0 && ratio <= 100 ? ratio : invalid() }
+      if (ratio < 0 || ratio > 100) {
+        invalid()
+      }
+      return item as unknown as Fragment
     }
     case 'TOOL_SEARCH':
-      return {
-        type,
-        queries: list(string)(item.queries),
-        results: list(searchResult)(item.results),
-        ...('status' in item ? { status: searchStatus(item.status) } : {}),
-        ...toolMetadata(item),
+      list(string)(item.queries)
+      list(searchResult)(item.results)
+      if ('status' in item) {
+        searchStatus(item.status)
       }
+      checkToolMetadata(item)
+      return item as unknown as Fragment
     case 'TOOL_OPEN':
-      return {
-        type,
-        status: searchStatus(item.status),
-        url: nullable(string)(item.url),
-        title: nullable(string)(item.title),
-        ...('snippet' in item ? { snippet: nullable(string)(item.snippet) } : {}),
-        ...('site_name' in item ? { site_name: nullable(string)(item.site_name) } : {}),
-        published_at: nullable(time)(item.published_at),
-        ...toolMetadata(item),
+      searchStatus(item.status)
+      nullable(string)(item.url)
+      nullable(string)(item.title)
+      if ('snippet' in item) {
+        nullable(string)(item.snippet)
       }
+      if ('site_name' in item) {
+        nullable(string)(item.site_name)
+      }
+      nullable(time)(item.published_at)
+      checkToolMetadata(item)
+      return item as unknown as Fragment
     case 'TOOL_FIND':
-      return {
-        type,
-        status: oneOf('WIP', 'FINISHED', 'NO_RESULT', 'FAILED')(item.status),
-        ...('pattern' in item ? { pattern: string(item.pattern) } : {}),
-        ...toolMetadata(item),
+      oneOf('WIP', 'FINISHED', 'NO_RESULT', 'FAILED')(item.status)
+      if ('pattern' in item) {
+        string(item.pattern)
       }
+      checkToolMetadata(item)
+      return item as unknown as Fragment
     case 'READ_LINK':
-      return {
-        type,
-        results: list((result) => {
-          const entry = record(result)
-          return {
-            signature: string(entry.signature),
-            ...('url' in entry ? { url: string(entry.url) } : {}),
-            ...('title' in entry ? { title: nullable(string)(entry.title) } : {}),
-          }
-        })(item.results),
-      }
+      list((result) => {
+        const entry = record(result)
+        string(entry.signature)
+        if ('url' in entry) {
+          string(entry.url)
+        }
+        if ('title' in entry) {
+          nullable(string)(entry.title)
+        }
+        return entry
+      })(item.results)
+      return item as unknown as Fragment
     case 'FILE':
-      return { type, files: list(fileEntry)(item.files) }
+      list(fileEntry)(item.files)
+      return item as unknown as Fragment
     case 'TOOL_IMAGE_SEARCH':
-      return {
-        type,
-        status: searchStatus(item.status),
-        ...('image_indexes' in item ? { image_indexes: list(count)(item.image_indexes) } : {}),
-        ...toolMetadata(item),
-        results: list((result) => {
-          const entry = record(result)
-          return {
-            title: string(entry.title),
-            source_page_url: string(entry.source_page_url),
-            snippet: string(entry.snippet),
-            site_name: nullable(string)(entry.site_name),
-            published_at: nullable(time)(entry.published_at),
-          }
-        })(item.results),
+      searchStatus(item.status)
+      if ('image_indexes' in item) {
+        list(count)(item.image_indexes)
       }
+      checkToolMetadata(item)
+      list((result) => {
+        const entry = record(result)
+        string(entry.title)
+        string(entry.source_page_url)
+        string(entry.snippet)
+        nullable(string)(entry.site_name)
+        nullable(time)(entry.published_at)
+        return entry
+      })(item.results)
+      return item as unknown as Fragment
     default:
       return invalid()
   }
@@ -199,25 +210,35 @@ const fragment: Read<Fragment | null> = (value) => {
 
 const message: Read<ChatMessage> = (value) => {
   const item = record(value)
-  return {
-    id: count(item.id),
-    parent_id: nullable(count)(item.parent_id),
-    role: oneOf('USER', 'ASSISTANT')(item.role),
-    status: oneOf(
-      'WIP',
-      'FINISHED',
-      'CONTENT_FILTER',
-      'FAILED',
-      'INCOMPLETE',
-      'CONTEXT_LENGTH_EXCEEDED',
-      'TIMEOUT'
-    )(item.status),
-    thinking_enabled: boolean(item.thinking_enabled),
-    search_enabled: boolean(item.search_enabled),
-    accumulated_token_usage: count(item.accumulated_token_usage),
-    inserted_at: time(item.inserted_at),
-    fragments: list(fragment)(item.fragments).filter((item): item is Fragment => item !== null),
+  count(item.id)
+  nullable(count)(item.parent_id)
+  oneOf('USER', 'ASSISTANT')(item.role)
+  oneOf(
+    'WIP',
+    'FINISHED',
+    'CONTENT_FILTER',
+    'FAILED',
+    'INCOMPLETE',
+    'CONTEXT_LENGTH_EXCEEDED',
+    'TIMEOUT'
+  )(item.status)
+  boolean(item.thinking_enabled)
+  boolean(item.search_enabled)
+  count(item.accumulated_token_usage)
+  time(item.inserted_at)
+  const rawFragments = item.fragments
+  if (!Array.isArray(rawFragments)) {
+    return invalid()
   }
+  // 逐个校验片段、丢掉不兼容的，但不再重建片段对象本身
+  const fragments: Fragment[] = []
+  for (const raw of rawFragments) {
+    const checked = fragment(raw)
+    if (checked) {
+      fragments.push(checked)
+    }
+  }
+  return { ...item, fragments } as unknown as ChatMessage
 }
 
 /** 会话 ID 用于拼接条目名，不能含路径分隔符 */
@@ -239,25 +260,22 @@ export const checkManifest = (value: unknown): void => {
 
 export const readSessionIndex: Read<SessionIndexEntry[]> = list((value) => {
   const item = record(value)
-  return {
-    id: sessionId(item.id),
-    title: nullable(string)(item.title),
-    pinned: false,
-    message_count: count(item.message_count),
-    inserted_at: time(item.inserted_at),
-    updated_at: time(item.updated_at),
-  }
+  sessionId(item.id)
+  nullable(string)(item.title)
+  count(item.message_count)
+  time(item.inserted_at)
+  time(item.updated_at)
+  // 归档里的置顶状态不导入
+  return { ...item, pinned: false } as unknown as SessionIndexEntry
 })
 
 export const readSessionFile: Read<SessionFile> = (value) => {
   const item = record(value)
-  return {
-    id: sessionId(item.id),
-    title: nullable(string)(item.title),
-    pinned: false,
-    current_message_id: count(item.current_message_id),
-    inserted_at: time(item.inserted_at),
-    updated_at: time(item.updated_at),
-    messages: list(message)(item.messages),
-  }
+  sessionId(item.id)
+  nullable(string)(item.title)
+  count(item.current_message_id)
+  time(item.inserted_at)
+  time(item.updated_at)
+  const messages = list(message)(item.messages)
+  return { ...item, pinned: false, messages } as unknown as SessionFile
 }
