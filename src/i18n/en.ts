@@ -390,6 +390,8 @@ export const en = {
   historyImportPause: 'Pause',
   historyImportResume: 'Resume',
   historyImportPaused: 'Paused',
+  historyImportCancelling: 'Cancelling...',
+  historyImportMerging: 'Saving...',
   historyImportedOne: 'Imported 1 chat',
   historyImported: 'Imported {count} chats',
   historyImportedWithSkipped: 'Imported {count} chats, skipped {skipped} existing chats',

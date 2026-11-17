@@ -85,7 +85,7 @@ export const importArchive = async (
   }
 
   try {
-    for await (const entry of readArchive(file, onProgress)) {
+    for await (const entry of readArchive(file, onProgress, control)) {
       // 每个条目之间允许暂停与取消；当前条目会先写完再停。
       await control?.checkpoint()
       const { path } = entry

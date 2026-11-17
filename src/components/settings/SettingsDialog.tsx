@@ -607,6 +607,9 @@ const ImportHistory = ({ disabled }: { disabled: boolean }) => {
   const percent = Math.floor((historyImport.progress ?? 0) * 100)
   // 还没有读到字节时（大文件首次读取可能较慢）用不确定进度条，避免停在 0% 像卡住
   const loading = historyImport.busy && !historyImport.paused && percent === 0
+  // 条目读完后进入合并事务，结束前不能取消，避免事务中途中止
+  const merging = historyImport.busy && !historyImport.paused && percent >= 100
+  const locked = historyImport.cancelling || merging
 
   return (
     <>
@@ -659,23 +662,28 @@ const ImportHistory = ({ disabled }: { disabled: boolean }) => {
           </div>
           <div className={styles.importProgressRow}>
             <span className={styles.importProgressText}>
-              {historyImport.paused
-                ? `${t('historyImportPaused')} ${percent}%`
-                : loading
-                  ? t('historyImportReading')
-                  : `${t('historyImporting')} ${percent}%`}
+              {historyImport.cancelling
+                ? t('historyImportCancelling')
+                : historyImport.paused
+                  ? `${t('historyImportPaused')} ${percent}%`
+                  : loading
+                    ? t('historyImportReading')
+                    : merging
+                      ? t('historyImportMerging')
+                      : `${t('historyImporting')} ${percent}%`}
             </span>
             <div className={styles.importProgressActions}>
               <Button
                 variant="outlined"
                 size="s"
+                disabled={locked}
                 onClick={() =>
                   historyImport.paused ? historyImport.resume() : historyImport.pause()
                 }
               >
                 {historyImport.paused ? t('historyImportResume') : t('historyImportPause')}
               </Button>
-              <Button variant="outlined" size="s" onClick={() => historyImport.abort()}>
+              <Button variant="outlined" size="s" disabled={locked} onClick={() => historyImport.abort()}>
                 {t('cancel')}
               </Button>
             </div>

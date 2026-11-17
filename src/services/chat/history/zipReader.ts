@@ -1,5 +1,7 @@
 import { Inflate } from 'fflate'
 
+import type { ImportControl } from './importControl.js'
+
 const READ_CHUNK_BYTES = 256 * 1024
 // 控制每轮同步解压的工作量；输出交给调用方保存后才继续读取。
 const INFLATE_CHUNK_BYTES = 8 * 1024
@@ -240,9 +242,12 @@ export type ArchiveEntry = {
  */
 export async function* readArchive(
   file: File,
-  onProgress?: (loaded: number, total: number) => void
+  onProgress?: (loaded: number, total: number) => void,
+  control?: ImportControl
 ): AsyncGenerator<ArchiveEntry> {
   const directory = await readDirectory(file)
+  // 首次读取大文件可能要整份复制，读完目录立即给取消一次机会。
+  await control?.checkpoint()
   // 中央目录位于文件末尾，解析完成即代表尾部字节已经读过。
   onProgress?.(directory.offset, file.size)
   for (const [index, entry] of directory.entries.entries()) {
@@ -270,6 +275,8 @@ export async function* readArchive(
       }
       const inflate = entry.method === 8 ? new Inflate(append) : null
       for (let offset = 0; offset < entry.compressedSize; offset += READ_CHUNK_BYTES) {
+        // 每个压缩块之间都允许暂停与取消，大条目也不会卡住取消操作。
+        await control?.checkpoint()
         const chunk = await readBytes(
           file,
           start + offset,

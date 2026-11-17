@@ -377,6 +377,8 @@ export const zh = {
   historyImportPause: '暂停',
   historyImportResume: '继续',
   historyImportPaused: '已暂停',
+  historyImportCancelling: '正在取消...',
+  historyImportMerging: '正在整理数据...',
   historyImportedOne: '已导入 1 个对话',
   historyImported: '已导入 {count} 个对话',
   historyImportedWithSkipped: '已导入 {count} 个对话，跳过 {skipped} 个已有对话',
