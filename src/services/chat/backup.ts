@@ -5,6 +5,7 @@ import type { Session } from './types.js'
 
 export { BackupError } from './history/errors.js'
 export { ImportCancelled } from './history/importControl.js'
+import type { ArchiveSource } from './history/zipReader.js'
 import type { ImportControl } from './history/importControl.js'
 
 // 导入、导出与全部删除串行处理，避免读取归档时数据被清空或两个替换事务交错。
@@ -46,14 +47,14 @@ export const exportHistory = (): Promise<{ name: string; blob: Blob }> =>
  * 格式与版本在 importArchive 读取首个 manifest 时就校验，失败时只清暂存，不动正式数据。
  */
 export const importHistory = (
-  file: File,
+  source: ArchiveSource,
   onProgress?: (loaded: number, total: number) => void,
   control?: ImportControl,
   options?: { includeImages?: boolean }
 ): Promise<{ imported: number; skipped: number }> =>
   enqueueBackup(async () => {
     const { importArchive } = await import('./history/importArchive.js')
-    return mergeHistory(() => importArchive(file, onProgress, control, options))
+    return mergeHistory(() => importArchive(source, onProgress, control, options))
   })
 
 /** 确认删除后调用：以空历史原子替换全部本地会话与附件，保留 API Key 和其他设置。 */

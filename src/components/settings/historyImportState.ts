@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { importHistory, ImportCancelled } from '../../services/chat/backup.js'
 import { createImportControl, type ImportControl } from '../../services/chat/history/importControl.js'
+import type { ImportPick } from '../../services/chat/history/importSource.js'
 import type { SettingStatus } from './SettingCell.js'
 
 /**
@@ -9,7 +10,7 @@ import type { SettingStatus } from './SettingCell.js'
  */
 type HistoryImportState = {
   /** 已选中但尚未确认的文件 */
-  file: File | null
+  file: ImportPick | null
   /** 导入时是否包含图片附件；关闭后只导入对话文字 */
   includeImages: boolean
   busy: boolean
@@ -22,7 +23,7 @@ type HistoryImportState = {
   /** 已读取字节占文件的比例，0–1；非导入中为 null */
   progress: number | null
   status: SettingStatus
-  select: (file: File) => void
+  select: (pick: ImportPick) => void
   setIncludeImages: (includeImages: boolean) => void
   cancel: () => void
   confirm: () => Promise<void>
@@ -47,11 +48,20 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
   progress: null,
   status: null,
 
-  select: (file) => set({ file }),
+  select: (pick) => {
+    const previous = get().file
+    if (previous && previous !== pick) {
+      previous.release?.()
+    }
+    set({ file: pick })
+  },
 
   setIncludeImages: (includeImages) => set({ includeImages }),
 
-  cancel: () => set({ file: null }),
+  cancel: () => {
+    get().file?.release?.()
+    set({ file: null })
+  },
 
   pause: () => {
     if (!control || !get().busy) {
@@ -76,8 +86,8 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
   },
 
   confirm: async () => {
-    const file = get().file
-    if (!file || importing) {
+    const pick = get().file
+    if (!pick || importing) {
       return
     }
     importing = true
@@ -88,13 +98,13 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
       busy: true,
       paused: false,
       cancelling: false,
-      fileSize: file.size,
+      fileSize: pick.size,
       progress: 0,
       status: { key: 'historyImporting' },
     })
     try {
       const { imported, skipped } = await importHistory(
-        file,
+        pick.source,
         (loaded, total) => {
           set({ progress: total > 0 ? Math.min(1, loaded / total) : 0 })
         },
@@ -118,6 +128,8 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
     } finally {
       importing = false
       control = null
+      // 原生读取源持有文件描述符，导入结束就释放
+      pick.release?.()
       set({ busy: false, paused: false, cancelling: false, fileSize: null, progress: null })
     }
   },

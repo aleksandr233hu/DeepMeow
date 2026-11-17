@@ -1,6 +1,7 @@
 import * as db from '../db.js'
 import { BackupError, fail } from './errors.js'
 import type { ImportControl } from './importControl.js'
+import type { ArchiveSource } from './zipReader.js'
 import type { Session } from '../types.js'
 import type { SessionIndexEntry } from './format.js'
 import { INDEX_PATH, MANIFEST_PATH, USER_PATH, parseSessionPath, sessionFilesDir } from './paths.js'
@@ -63,12 +64,12 @@ const FILE_BATCH_SIZE = 8
  * 调用方负责先清空暂存，成功后替换正式数据，失败时清理暂存。
  */
 export const importArchive = async (
-  file: File,
+  source: ArchiveSource,
   onProgress?: (loaded: number, total: number) => void,
   control?: ImportControl,
   options?: { includeImages?: boolean }
 ): Promise<void> => {
-  if (!(await isZipFile(file))) {
+  if (!(await isZipFile(source))) {
     fail('backupUnrecognized')
   }
   const includeImages = options?.includeImages ?? true
@@ -109,7 +110,7 @@ export const importArchive = async (
 
   try {
     for await (const entry of readArchive(
-      file,
+      source,
       onProgress,
       control,
       // 不导入图片时连解压都跳过：图片条目按目录直接越过，只保留会话里的文件名。

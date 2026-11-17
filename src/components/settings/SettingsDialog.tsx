@@ -20,6 +20,8 @@ import {
 } from '../../services/chat/backup.js'
 import { useIsMobile } from '../../app/viewport.js'
 import { useChatStore } from '../../services/chat/store.js'
+import { filePick } from '../../services/chat/history/importSource.js'
+import { pickNativeArchive, supportsNativeArchive } from '../../services/chat/history/nativeArchive.js'
 import { formatSize } from '../../services/attachments.js'
 import { regionCodes, getRegionName, provinces } from '../../services/location.js'
 import {
@@ -639,6 +641,22 @@ const ImportHistory = ({ disabled }: { disabled: boolean }) => {
           ? t('historyImportMerging')
           : `${t('historyImporting')} ${percent}%`
 
+  // Android 原生壳走系统选择器直读，避免几百 MB 的文件先被复制进 WebView 缓存
+  const pickFile = async () => {
+    if (!supportsNativeArchive()) {
+      inputRef.current?.click()
+      return
+    }
+    try {
+      const pick = await pickNativeArchive()
+      if (pick) {
+        historyImport.select(pick)
+      }
+    } catch {
+      showToast({ key: 'historyImportFailed', type: 'error' })
+    }
+  }
+
   return (
     <>
       <SettingCell
@@ -652,7 +670,7 @@ const ImportHistory = ({ disabled }: { disabled: boolean }) => {
               size="m"
               className={clsx(styles.cellButton, styles.uploadButton)}
               disabled={disabled}
-              onClick={() => inputRef.current?.click()}
+              onClick={() => void pickFile()}
             >
               <IconUploadOutline14 />
               {t('upload')}
@@ -668,7 +686,7 @@ const ImportHistory = ({ disabled }: { disabled: boolean }) => {
                 const file = event.target.files?.[0]
                 event.target.value = ''
                 if (file) {
-                  historyImport.select(file)
+                  historyImport.select(filePick(file))
                 }
               }}
             />
