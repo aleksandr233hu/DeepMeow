@@ -389,6 +389,20 @@ const ImportConfirm = () => {
       }
     >
       <div className={styles.importConfirmText}>{t('historyImportConfirmDescription')}</div>
+      {/* 大归档的体积几乎都在图片上；关掉后只写对话文字，导入快一个数量级 */}
+      <div className={styles.importConfirmOption}>
+        <div className={styles.importConfirmOptionText}>
+          <div className={styles.label}>{t('historyImportIncludeImages')}</div>
+          <div className={styles.description}>
+            {t('historyImportIncludeImagesDescription')}
+          </div>
+        </div>
+        <Toggle
+          checked={historyImport.includeImages}
+          label={t('historyImportIncludeImages')}
+          onChange={historyImport.setIncludeImages}
+        />
+      </div>
     </Modal>
   )
 }

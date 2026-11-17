@@ -65,11 +65,13 @@ const FILE_BATCH_SIZE = 8
 export const importArchive = async (
   file: File,
   onProgress?: (loaded: number, total: number) => void,
-  control?: ImportControl
+  control?: ImportControl,
+  options?: { includeImages?: boolean }
 ): Promise<void> => {
   if (!(await isZipFile(file))) {
     fail('backupUnrecognized')
   }
+  const includeImages = options?.includeImages ?? true
   const imported = new Set<string>()
   const images = new Map<string, string>()
   /** 已保存的原件：文件 ID → MIME。同一图片出现在多个会话目录时只保存一次。 */
@@ -106,7 +108,13 @@ export const importArchive = async (
   }
 
   try {
-    for await (const entry of readArchive(file, onProgress, control)) {
+    for await (const entry of readArchive(
+      file,
+      onProgress,
+      control,
+      // 不导入图片时连解压都跳过：图片条目按目录直接越过，只保留会话里的文件名。
+      includeImages ? undefined : (path) => /^chat_sessions\/[^/]+_files\//.test(path)
+    )) {
       // 每个条目之间允许暂停与取消；当前条目会先写完再停。
       await control?.checkpoint()
       const { path } = entry

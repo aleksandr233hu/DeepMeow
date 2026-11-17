@@ -10,6 +10,8 @@ import type { SettingStatus } from './SettingCell.js'
 type HistoryImportState = {
   /** 已选中但尚未确认的文件 */
   file: File | null
+  /** 导入时是否包含图片附件；关闭后只导入对话文字 */
+  includeImages: boolean
   busy: boolean
   /** 用户暂停了正在进行的导入 */
   paused: boolean
@@ -21,6 +23,7 @@ type HistoryImportState = {
   progress: number | null
   status: SettingStatus
   select: (file: File) => void
+  setIncludeImages: (includeImages: boolean) => void
   cancel: () => void
   confirm: () => Promise<void>
   pause: () => void
@@ -36,6 +39,7 @@ let control: ImportControl | null = null
 
 export const useHistoryImport = create<HistoryImportState>((set, get) => ({
   file: null,
+  includeImages: true,
   busy: false,
   paused: false,
   cancelling: false,
@@ -44,6 +48,8 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
   status: null,
 
   select: (file) => set({ file }),
+
+  setIncludeImages: (includeImages) => set({ includeImages }),
 
   cancel: () => set({ file: null }),
 
@@ -92,7 +98,8 @@ export const useHistoryImport = create<HistoryImportState>((set, get) => ({
         (loaded, total) => {
           set({ progress: total > 0 ? Math.min(1, loaded / total) : 0 })
         },
-        current
+        current,
+        { includeImages: get().includeImages }
       )
       set({
         status:

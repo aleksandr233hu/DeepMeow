@@ -383,6 +383,9 @@ export const en = {
   historyImportConfirmTitle: 'Import chat history?',
   historyImportConfirmDescription:
     'Imported chats are added after your existing chats. Duplicate chats are skipped automatically.',
+  historyImportIncludeImages: 'Include image attachments',
+  historyImportIncludeImagesDescription:
+    'Turn off to import text only, which is much faster; image names are still kept.',
   historyImportDescription:
     'Supports ZIP files exported from DeepSeek. Imported chats are appended and existing chats stay unchanged.',
   historyImporting: 'Importing...',

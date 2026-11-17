@@ -48,11 +48,12 @@ export const exportHistory = (): Promise<{ name: string; blob: Blob }> =>
 export const importHistory = (
   file: File,
   onProgress?: (loaded: number, total: number) => void,
-  control?: ImportControl
+  control?: ImportControl,
+  options?: { includeImages?: boolean }
 ): Promise<{ imported: number; skipped: number }> =>
   enqueueBackup(async () => {
     const { importArchive } = await import('./history/importArchive.js')
-    return mergeHistory(() => importArchive(file, onProgress, control))
+    return mergeHistory(() => importArchive(file, onProgress, control, options))
   })
 
 /** 确认删除后调用：以空历史原子替换全部本地会话与附件，保留 API Key 和其他设置。 */

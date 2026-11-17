@@ -335,6 +335,24 @@
   gap: 8px;
 }
 
+/* 导入确认框里的「包含图片附件」开关 */
+.importConfirmOption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dsw-alias-border-l2);
+}
+
+.importConfirmOptionText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .apiKey {
   display: flex;
   flex-direction: column;

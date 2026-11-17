@@ -370,6 +370,9 @@ export const zh = {
   historyImportConfirmTitle: '导入历史对话？',
   historyImportConfirmDescription:
     '导入的对话会追加到现有对话之后，已有对话保持不变；重复的对话会自动跳过。',
+  historyImportIncludeImages: '包含图片附件',
+  historyImportIncludeImagesDescription:
+    '关闭后只导入对话文字，速度快很多；图片位置仍保留文件名。',
   historyImportDescription:
     '支持 DeepSeek 导出的 ZIP 文件；导入的对话会追加到现有对话之后，不会覆盖已有对话。',
   historyImporting: '正在导入...',

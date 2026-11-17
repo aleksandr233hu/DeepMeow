@@ -243,7 +243,8 @@ export type ArchiveEntry = {
 export async function* readArchive(
   file: File,
   onProgress?: (loaded: number, total: number) => void,
-  control?: ImportControl
+  control?: ImportControl,
+  shouldSkip?: (path: string) => boolean
 ): AsyncGenerator<ArchiveEntry> {
   const directory = await readDirectory(file)
   // 首次读取大文件可能要整份复制，读完目录立即给取消一次机会。
@@ -254,6 +255,11 @@ export async function* readArchive(
     const boundary = directory.entries[index + 1]?.offset ?? directory.offset
     const start = await readEntryOffset(file, entry, boundary)
     if (entry.path.endsWith('/')) {
+      continue
+    }
+    if (shouldSkip?.(entry.path)) {
+      // 跳过的条目只读本地文件头，不解压数据也不校验 CRC；进度按文件位置推进。
+      onProgress?.(boundary, file.size)
       continue
     }
     let completed = false
