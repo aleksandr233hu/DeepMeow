@@ -25,6 +25,48 @@ const sortMemories = (memories: MemoryRecord[]) =>
 const setMemories = (memories: MemoryRecord[]) =>
   useMemoryStore.setState({ memories: sortMemories(memories) })
 
+/** 版本记忆的固定 id：升级时更新同一条，不会越积越多 */
+const VERSION_MEMORY_ID = 'deepmeow-version'
+
+/** 把当前版本写进长期记忆，让模型能回答「你是什么版本」 */
+const ensureVersionMemory = async (): Promise<void> => {
+  const text = `DeepMeow 当前版本 v${__APP_VERSION__}`
+  const normalized = normalizeMemoryText(text)
+  const current = useMemoryStore.getState().memories
+  const existing = current.find((memory) => memory.id === VERSION_MEMORY_ID)
+  if (existing) {
+    if (existing.text === text) {
+      return
+    }
+    const updated: MemoryRecord = { ...existing, text, normalized, updatedAt: Date.now() }
+    try {
+      await db.saveMemory(updated)
+    } catch (error) {
+      db.reportStorageError('update version memory')(error)
+      return
+    }
+    setMemories(current.map((memory) => (memory.id === VERSION_MEMORY_ID ? updated : memory)))
+    return
+  }
+  const now = Date.now()
+  const record: MemoryRecord = {
+    id: VERSION_MEMORY_ID,
+    text,
+    normalized,
+    source: 'auto',
+    enabled: true,
+    createdAt: now,
+    updatedAt: now,
+  }
+  try {
+    await db.saveMemory(record)
+  } catch (error) {
+    db.reportStorageError('save version memory')(error)
+    return
+  }
+  setMemories([...current, record])
+}
+
 /** 首次启动加载；失败时也标记 ready，避免阻塞界面 */
 export const initMemories = (): Promise<void> => {
   if (useMemoryStore.getState().ready) {
@@ -33,6 +75,7 @@ export const initMemories = (): Promise<void> => {
   initTask ??= (async () => {
     try {
       setMemories(await db.loadMemories())
+      await ensureVersionMemory()
     } catch (error) {
       db.reportStorageError('load memories')(error)
     } finally {

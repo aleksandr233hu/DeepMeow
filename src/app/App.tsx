@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useTranslate } from '../i18n/index.js'
 import { initAvatars } from '../services/avatar/store.js'
+import { initSessionGroups } from '../services/chat/groups.js'
 import { initMemories } from '../services/memory/store.js'
 import { initPresets } from '../services/presets/store.js'
 import { useSettings } from '../services/settings.js'
@@ -79,6 +80,7 @@ export const App = () => {
     void initMemories()
     void initPresets()
     void initAvatars()
+    void initSessionGroups()
     // 首次打开先在设置里输入 API Key
     ensureApiKey()
   }, [])

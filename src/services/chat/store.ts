@@ -548,6 +548,23 @@ export const setSessionPinned = (id: string, pinned: boolean) => {
   void db.setSessionPinned(id, pinned).catch(db.reportStorageError('pin session'))
 }
 
+/** 会话归属自定义分组；null 表示移出分组。 */
+export const setSessionGroup = (id: string, groupId: string | null) => {
+  if (get().importingHistory || deletingSessions.has(id)) {
+    return
+  }
+  set((state) => ({
+    sessions: state.sessions.map((session) =>
+      session.id === id ? { ...session, groupId: groupId ?? undefined } : session
+    ),
+  }))
+  if (getSession(id)) {
+    updateSession(id, (session) => ({ ...session, groupId: groupId ?? undefined }))
+    persist(id)
+  }
+  void db.setSessionGroup(id, groupId).catch(db.reportStorageError('move session to group'))
+}
+
 /**
  * 删除会话；本地原件仅在没有其他会话引用时清理。远端文件不删：导入、编辑、重新生成都会复用同一个附件，
  * 同一服务端文件可能被多个会话引用，不维护引用计数。

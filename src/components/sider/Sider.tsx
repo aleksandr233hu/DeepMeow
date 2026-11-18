@@ -1,13 +1,26 @@
 import clsx from 'clsx'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslate } from '../../i18n/index.js'
-import { IconPanelLeftOutline16, IconPaw16, IconSettingsOutline16 } from '../base/icons.js'
+import {
+  IconEllipsisOutline16,
+  IconNewChatOutline16,
+  IconPanelLeftOutline16,
+  IconPaw16,
+  IconSettingsOutline16,
+} from '../base/icons.js'
 import { setSiderCollapsed } from '../../services/settings.js'
 import { groupSessions } from '../../services/chat/sessionGroups.js'
+import {
+  createSessionGroup,
+  removeSessionGroup,
+  renameSessionGroup,
+  useSessionGroups,
+} from '../../services/chat/groups.js'
 import { newChat, removeSession, useChatStore } from '../../services/chat/store.js'
-import type { SessionSummary } from '../../services/chat/types.js'
+import type { SessionGroup, SessionSummary } from '../../services/chat/types.js'
 import { Button } from '../base/Button.js'
 import { IconButton } from '../base/IconButton.js'
+import { Menu } from '../base/Menu.js'
 import { Modal } from '../base/Modal.js'
 import { showToast } from '../base/toastState.js'
 import { openSettings } from '../settings/settingsDialogState.js'
@@ -21,11 +34,66 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
   const sessions = useChatStore((state) => state.sessions)
   const activeId = useChatStore((state) => state.activeId)
   const [now, setNow] = useState(Date.now)
-  // 置顶会话单独成组，时间分组里不再重复出现
-  const pinnedSessions = useMemo(() => sessions.filter((session) => session.pinned), [sessions])
-  const restSessions = useMemo(() => sessions.filter((session) => !session.pinned), [sessions])
+  const sessionGroups = useSessionGroups((state) => state.groups)
+  const groupIds = useMemo(() => new Set(sessionGroups.map((group) => group.id)), [sessionGroups])
+  // 分组归类优先：归入分组的会话只在分组里出现，置顶组与时间分组都不再重复
+  const isGrouped = (session: SessionSummary) =>
+    Boolean(session.groupId && groupIds.has(session.groupId))
+  const pinnedSessions = useMemo(
+    () => sessions.filter((session) => session.pinned && !isGrouped(session)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sessions, groupIds]
+  )
+  const restSessions = useMemo(
+    () => sessions.filter((session) => !session.pinned && !isGrouped(session)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sessions, groupIds]
+  )
   const groups = useMemo(() => groupSessions(restSessions, now, t), [restSessions, now, t])
   const [pinnedOpen, setPinnedOpen] = useState(true)
+  const [collapsedGroups, setCollapsedGroups] = useState<ReadonlySet<string>>(() => new Set())
+  const [groupDialog, setGroupDialog] = useState<{ id: string | null; name: string } | null>(null)
+  const [groupPending, setGroupPending] = useState(false)
+
+  const toggleGroup = (id: string) => {
+    setCollapsedGroups((current) => {
+      const next = new Set(current)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const saveGroup = async () => {
+    if (!groupDialog || groupPending) {
+      return
+    }
+    const name = groupDialog.name.trim()
+    if (!name) {
+      return
+    }
+    setGroupPending(true)
+    const ok = groupDialog.id
+      ? await renameSessionGroup(groupDialog.id, name)
+      : (await createSessionGroup(name)) !== null
+    setGroupPending(false)
+    if (ok) {
+      setGroupDialog(null)
+    } else {
+      showToast({ key: 'groupSaveFailed', type: 'error' })
+    }
+  }
+
+  const deleteGroup = async (group: SessionGroup) => {
+    if (await removeSessionGroup(group.id)) {
+      showToast({ key: 'groupDeleted' })
+    } else {
+      showToast({ key: 'groupDeleteFailed', type: 'error' })
+    }
+  }
   const [deleting, setDeleting] = useState<SessionSummary | null>(null)
   const [deletePending, setDeletePending] = useState(false)
 
@@ -83,6 +151,16 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
         </span>
         {t('newChat')}
       </button>
+      <button
+        type="button"
+        className={styles.newGroup}
+        onClick={() => setGroupDialog({ id: null, name: '' })}
+      >
+        <span className={styles.newGroupIcon}>
+          <IconNewChatOutline16 />
+        </span>
+        {t('groupNew')}
+      </button>
       <div className={styles.listWrap}>
         <div className={styles.list}>
           {pinnedSessions.length > 0 ? (
@@ -108,6 +186,61 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
                 : null}
             </div>
           ) : null}
+          {sessionGroups.map((group) => {
+            const items = sessions.filter((session) => session.groupId === group.id)
+            const open = !collapsedGroups.has(group.id)
+            return (
+              <div key={group.id} className={styles.section}>
+                <div className={styles.groupHeader}>
+                  <button
+                    type="button"
+                    className={clsx(styles.sectionHeader, styles.sectionToggle)}
+                    aria-expanded={open}
+                    onClick={() => toggleGroup(group.id)}
+                  >
+                    <span>{group.name}</span>
+                    <span className={styles.sectionChevron}>{open ? '▾' : '▸'}</span>
+                  </button>
+                  <Menu
+                    options={[
+                      {
+                        key: 'rename',
+                        label: t('groupRename'),
+                        onSelect: () => setGroupDialog({ id: group.id, name: group.name }),
+                      },
+                      {
+                        key: 'delete',
+                        label: t('groupDelete'),
+                        danger: true,
+                        onSelect: () => void deleteGroup(group),
+                      },
+                    ]}
+                  >
+                    {({ toggle }) => (
+                      <IconButton
+                        icon={<IconEllipsisOutline16 />}
+                        aria-label={t('more')}
+                        onClick={toggle}
+                      />
+                    )}
+                  </Menu>
+                </div>
+                {open
+                  ? items.map((session) => (
+                      <SessionItem
+                        key={session.id}
+                        session={session}
+                        active={session.id === activeId}
+                        onDelete={() => setDeleting(session)}
+                      />
+                    ))
+                  : null}
+                {open && items.length === 0 ? (
+                  <div className={styles.groupEmpty}>{t('groupEmpty')}</div>
+                ) : null}
+              </div>
+            )
+          })}
           {groups.map((group) => (
             <div key={group.key} className={styles.section}>
               <div className={styles.sectionHeader}>{group.label}</div>
@@ -166,6 +299,44 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
           }
         >
           {t('deleteSessionWithFilesDescription')}
+        </Modal>
+      ) : null}
+      {groupDialog ? (
+        <Modal
+          title={t(groupDialog.id ? 'groupRename' : 'groupNew')}
+          onClose={() => setGroupDialog(null)}
+          footer={
+            <>
+              <Button
+                variant="outlined"
+                disabled={groupPending}
+                onClick={() => setGroupDialog(null)}
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                variant="primary"
+                disabled={groupPending || !groupDialog.name.trim()}
+                onClick={() => void saveGroup()}
+              >
+                {t('confirm')}
+              </Button>
+            </>
+          }
+        >
+          <input
+            className={styles.groupInput}
+            autoFocus
+            maxLength={30}
+            placeholder={t('groupNamePlaceholder')}
+            value={groupDialog.name}
+            onChange={(event) => setGroupDialog({ ...groupDialog, name: event.target.value })}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+                void saveGroup()
+              }
+            }}
+          />
         </Modal>
       ) : null}
     </div>

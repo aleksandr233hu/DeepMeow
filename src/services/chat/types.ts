@@ -146,12 +146,21 @@ export type Session = {
   identitySource?: IdentitySource
   /** 侧栏置顶：只影响列表排序与分组 */
   pinned?: boolean
+  /** 所属的自定义分组；缺省表示未分组 */
+  groupId?: string
+}
+
+/** 自定义会话分组（文件夹式），侧栏按组显示 */
+export type SessionGroup = {
+  id: string
+  name: string
+  createdAt: number
 }
 
 /** 会话列表元数据；消息只在打开会话时加载。 */
 export type SessionSummary = Pick<
   Session,
-  'id' | 'title' | 'createdAt' | 'updatedAt' | 'pinned'
+  'id' | 'title' | 'createdAt' | 'updatedAt' | 'pinned' | 'groupId'
 >
 
 /** 显式提取字段，避免将完整会话的消息带进列表。 */
@@ -161,4 +170,5 @@ export const toSessionSummary = (session: SessionSummary): SessionSummary => ({
   createdAt: session.createdAt,
   updatedAt: session.updatedAt,
   pinned: session.pinned ?? false,
+  groupId: session.groupId,
 })

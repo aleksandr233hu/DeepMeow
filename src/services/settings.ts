@@ -216,6 +216,15 @@ const initialTopP = (): number | null => {
   return Number.isFinite(value) && value > 0 && value <= 1 ? value : null
 }
 
+/** Agent 自定义指令的默认内容：首次启动或用户清空后使用 */
+const DEFAULT_AGENT_INSTRUCTIONS =
+  '你就是 DeepMeow，一只赛博英短蓝猫，用中文回答问题。称呼用户“你”。DeepMeow为无性别设定。用户提到“DeepMeow”时指代的就是你。'
+
+const initialAgentInstructions = (): string => {
+  const saved = read(KEYS.agentInstructions) ?? read('chat-demo:default-system-prompt')
+  return saved?.trim() ? saved : DEFAULT_AGENT_INSTRUCTIONS
+}
+
 const initialMessageLayout = (): MessageLayout =>
   read(KEYS.messageLayout) === 'bubble' ? 'bubble' : 'classic'
 
@@ -243,7 +252,7 @@ export const useSettings = create<Settings>(() => ({
   foldLongMessages: readBoolean(KEYS.foldLongMessages, true),
   temperature: initialTemperature(),
   topP: initialTopP(),
-  agentInstructions: read(KEYS.agentInstructions) ?? read('chat-demo:default-system-prompt') ?? '',
+  agentInstructions: initialAgentInstructions(),
   identitySource: read(KEYS.identitySource) === 'agent' ? 'agent' : 'persona',
   messageLayout: initialMessageLayout(),
   showAvatars: readBoolean(KEYS.showAvatars, true),

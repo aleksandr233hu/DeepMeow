@@ -2,10 +2,12 @@ import clsx from 'clsx'
 import { memo, useState } from 'react'
 import { useTranslate } from '../../i18n/index.js'
 import { IconEditOutline16, IconEllipsisOutline16, IconTrashOutline16 } from '../base/icons.js'
-import { renameSession, selectSession, setSessionPinned } from '../../services/chat/store.js'
+import { renameSession, selectSession, setSessionGroup, setSessionPinned } from '../../services/chat/store.js'
+import { useSessionGroups } from '../../services/chat/groups.js'
 import type { SessionSummary } from '../../services/chat/types.js'
 import { IconButton } from '../base/IconButton.js'
 import { Menu } from '../base/Menu.js'
+import { showToast } from '../base/toastState.js'
 import { closeMobileSider } from './mobileSiderState.js'
 import styles from './SessionItem.module.css'
 
@@ -20,7 +22,12 @@ export const SessionItem = memo(function SessionItem({
 }) {
   const t = useTranslate()
   const [editing, setEditing] = useState(false)
+  const groups = useSessionGroups((state) => state.groups)
   const displayTitle = session.title || t('untitledChat')
+  const moveToGroup = (groupId: string | null) => {
+    setSessionGroup(session.id, groupId)
+    showToast({ key: 'groupMoved' })
+  }
 
   if (editing) {
     const finish = (title: string) => {
@@ -70,6 +77,21 @@ export const SessionItem = memo(function SessionItem({
               icon: <IconEditOutline16 />,
               onSelect: () => setEditing(true),
             },
+            ...groups.map((group) => ({
+              key: `group-${group.id}`,
+              label:
+                session.groupId === group.id ? `✓ ${group.name}` : `${t('groupMoveTo')}：${group.name}`,
+              onSelect: () => moveToGroup(group.id),
+            })),
+            ...(session.groupId
+              ? [
+                  {
+                    key: 'ungroup',
+                    label: t('groupUngroup'),
+                    onSelect: () => moveToGroup(null),
+                  },
+                ]
+              : []),
             {
               key: 'delete',
               label: t('delete'),

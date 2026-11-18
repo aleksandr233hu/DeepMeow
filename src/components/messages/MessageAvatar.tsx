@@ -1,10 +1,10 @@
 import { useTranslate } from '../../i18n/index.js'
-import deepseekLogo from '../../assets/images/deepseek-logo.png'
+import deepmeowAvatar from '../../assets/images/deepmeow-avatar.png'
 import { useAvatarObjectUrl } from '../../services/avatar/store.js'
 import { useSettings } from '../../services/settings.js'
 import styles from './MessageAvatar.module.css'
 
-/** 用户与助手头像：优先自定义图片；助手默认官方蓝鲸 logo，用户头像带小猫耳 */
+/** 用户与助手头像：优先自定义图片；助手默认使用应用图标（猫吉祥物），用户头像带小猫耳 */
 export const MessageAvatar = ({ role }: { role: 'user' | 'assistant' }) => {
   const t = useTranslate()
   const nickname = useSettings((state) => state.nickname)
@@ -22,7 +22,7 @@ export const MessageAvatar = ({ role }: { role: 'user' | 'assistant' }) => {
         {imageUrl ? (
           <img className={styles.image} src={imageUrl} alt="" />
         ) : role === 'assistant' ? (
-          <img className={styles.logo} src={deepseekLogo} alt="" />
+          <img className={styles.logo} src={deepmeowAvatar} alt="" />
         ) : (
           label
         )}

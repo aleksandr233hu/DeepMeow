@@ -2,10 +2,10 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { AvatarRecord } from '../avatar/types.js'
 import type { MemoryRecord } from '../memory/types.js'
 import type { Preset } from '../presets/types.js'
-import { toSessionSummary, type Session, type SessionSummary } from './types.js'
+import { toSessionSummary, type Session, type SessionGroup, type SessionSummary } from './types.js'
 
 /** IndexedDB 存储结构版本；新增或调整存储、索引时递增。 */
-const DB_VERSION = 13
+const DB_VERSION = 14
 
 /** 文件原件按附件的本地 id 存储，所有引用同一 id 的消息共用一份；用于缩略图、打开查看，以及没有 serverId 时补传。 */
 export type StoredFile = {
@@ -38,6 +38,8 @@ interface ChatDB extends DBSchema {
   presets: { key: string; value: Preset }
   /** 用户与助手的自定义头像原件 */
   avatars: { key: string; value: AvatarRecord }
+  /** 自定义会话分组（文件夹式） */
+  sessionGroups: { key: string; value: SessionGroup }
 }
 
 let dbPromise: Promise<IDBPDatabase<ChatDB>> | null = null
@@ -74,6 +76,7 @@ const getDB = () =>
         'memories',
         'presets',
         'avatars',
+        'sessionGroups',
       ] as const) {
         if (!db.objectStoreNames.contains(name)) {
           db.createObjectStore(name, { keyPath: 'id' })
@@ -153,6 +156,69 @@ export const setSessionPinned = async (id: string, pinned: boolean): Promise<voi
           await sessions.put(session)
           await tx.objectStore('sessionSummaries').put(storedSummary(session))
         }
+      } catch (error) {
+        abortTransaction(tx)
+        throw error
+      }
+    })(),
+    tx.done,
+  ])
+}
+
+/** 会话归属分组；groupId 为 null 表示移出分组。未打开的会话只改详情与摘要。 */
+export const setSessionGroup = async (id: string, groupId: string | null): Promise<void> => {
+  const tx = (await getDB()).transaction(['sessions', 'sessionSummaries'], 'readwrite')
+  await Promise.all([
+    (async () => {
+      try {
+        const sessions = tx.objectStore('sessions')
+        const session = await sessions.get(id)
+        if (session) {
+          if (groupId === null) {
+            delete session.groupId
+          } else {
+            session.groupId = groupId
+          }
+          await sessions.put(session)
+          await tx.objectStore('sessionSummaries').put(storedSummary(session))
+        }
+      } catch (error) {
+        abortTransaction(tx)
+        throw error
+      }
+    })(),
+    tx.done,
+  ])
+}
+
+export const loadSessionGroups = async (): Promise<SessionGroup[]> =>
+  (await getDB()).getAll('sessionGroups')
+
+export const saveSessionGroup = async (group: SessionGroup): Promise<void> => {
+  await (await getDB()).put('sessionGroups', group)
+}
+
+/** 删除分组，并把组内会话移出分组；会话本身保留。 */
+export const deleteSessionGroup = async (id: string): Promise<void> => {
+  const tx = (await getDB()).transaction(
+    ['sessions', 'sessionSummaries', 'sessionGroups'],
+    'readwrite'
+  )
+  await Promise.all([
+    (async () => {
+      try {
+        const sessions = tx.objectStore('sessions')
+        const summaries = tx.objectStore('sessionSummaries')
+        for (let cursor = await sessions.openCursor(); cursor; cursor = await cursor.continue()) {
+          const session = cursor.value
+          if (session.groupId !== id) {
+            continue
+          }
+          delete session.groupId
+          await cursor.update(session)
+          await summaries.put(storedSummary(session))
+        }
+        await tx.objectStore('sessionGroups').delete(id)
       } catch (error) {
         abortTransaction(tx)
         throw error

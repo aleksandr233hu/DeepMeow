@@ -33,7 +33,33 @@ const setPresets = (presets: Preset[]) =>
 
 let initTask: Promise<void> | undefined
 
-/** 首次启动加载预设；数据库为空时写入内置人格 */
+/** 内置预设的名称与指令以代码为准：升级后同步到已有数据，用户对内置预设的改动会被覆盖 */
+const syncBuiltinPresets = async (presets: Preset[]): Promise<Preset[]> => {
+  const builtins = new Map(createBuiltinPresets().map((preset) => [preset.id, preset]))
+  const next: Preset[] = []
+  for (const preset of presets) {
+    const builtin = builtins.get(preset.id)
+    if (!builtin || (builtin.name === preset.name && builtin.systemPrompt === preset.systemPrompt)) {
+      next.push(preset)
+      continue
+    }
+    const updated: Preset = {
+      ...preset,
+      name: builtin.name,
+      systemPrompt: builtin.systemPrompt,
+      updatedAt: Date.now(),
+    }
+    try {
+      await db.savePreset(updated)
+    } catch (error) {
+      db.reportStorageError('sync builtin preset')(error)
+    }
+    next.push(updated)
+  }
+  return next
+}
+
+/** 首次启动加载预设；数据库为空时写入内置人格，否则同步内置预设的最新文案 */
 export const initPresets = (): Promise<void> => {
   if (usePresetStore.getState().ready) {
     return Promise.resolve()
@@ -44,6 +70,8 @@ export const initPresets = (): Promise<void> => {
       if (presets.length === 0) {
         presets = createBuiltinPresets()
         await Promise.all(presets.map((preset) => db.savePreset(preset)))
+      } else {
+        presets = await syncBuiltinPresets(presets)
       }
       setPresets(presets)
     } catch (error) {

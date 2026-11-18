@@ -11,12 +11,12 @@ export const createBuiltinPresets = (): Preset[] => {
       id: 'builtin-general',
       name: '通用助手',
       emoji: '',
-      systemPrompt: '你是 DeepSeek。用清晰、准确、简洁的中文回答问题，先给结论再补充必要说明。',
+      systemPrompt: '你是 DeepMeow。用清晰、准确、简洁的中文回答问题，先给结论再补充必要说明。',
       ...base,
     },
     {
       id: 'builtin-analyst',
-      name: '严谨分析师',
+      name: '严谨分析',
       emoji: '',
       systemPrompt:
         '你是严谨的分析师。先澄清问题与前提，再分点论证；区分事实、推断与假设，给出可验证的结论和下一步建议。',
