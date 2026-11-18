@@ -1,0 +1,52 @@
+.dialog {
+  max-width: 460px;
+}
+
+.notes {
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+}
+
+.fill {
+  height: 100%;
+  border-radius: 3px;
+  background-color: var(--dsw-alias-brand-primary);
+  transition: width 0.2s ease-out;
+}
+
+.hint {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.tip {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}

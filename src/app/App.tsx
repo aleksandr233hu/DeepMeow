@@ -13,6 +13,8 @@ import {
   useChatStore,
 } from '../services/chat/store.js'
 import { SearchPanel } from '../components/search/SearchPanel.js'
+import { UpdateDialog } from '../components/update/UpdateDialog.js'
+import { useUpdateStore } from '../services/update/updateState.js'
 import { closeSearchPanel } from '../components/search/searchPanelState.js'
 import { SessionView } from '../components/session/SessionView.js'
 import { SessionSettingsDialog } from '../components/session/SessionSettingsDialog.js'
@@ -81,6 +83,14 @@ export const App = () => {
     ensureApiKey()
   }, [])
 
+  useEffect(() => {
+    const { init, autoCheck } = useUpdateStore.getState()
+    void init()
+    // 延后检查更新：避开启动时的数据加载与首屏渲染，失败时静默
+    const timer = setTimeout(() => void autoCheck(), 4000)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <>
       <div ref={frameRef} className={styles.frame}>
@@ -143,6 +153,7 @@ export const App = () => {
       <SettingsDialog />
       <SessionSettingsDialog />
       <ForkDialog />
+      <UpdateDialog />
       <Toast />
     </>
   )

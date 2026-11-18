@@ -54,6 +54,7 @@ import { MemorySection } from './MemorySection.js'
 import { PersonalizationSection } from './PersonalizationSection.js'
 import { PresetsSection } from './PresetsSection.js'
 import { SettingCell } from './SettingCell.js'
+import { UpdateSection } from './UpdateSection.js'
 import { Toggle } from '../base/Toggle.js'
 import { closeSettings, useSettingsDialog, type SettingsSection } from './settingsDialogState.js'
 import styles from './Settings.module.css'
@@ -150,6 +151,7 @@ const SettingsContent = () => {
               <LocaleSetting />
               <TtsVoiceSetting />
               <LocationSetting />
+              <UpdateSection />
               {isMobile ? <ApiKeyConfirm editor={apiKeyEditor} /> : null}
             </>
           ) : section === 'chat' ? (

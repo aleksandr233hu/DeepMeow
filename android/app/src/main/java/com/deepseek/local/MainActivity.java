@@ -9,6 +9,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // 必须在 super.onCreate 之前注册，否则 bridge 加载时拿不到插件
         registerPlugin(HistoryFilePlugin.class);
+        registerPlugin(AppUpdatePlugin.class);
         super.onCreate(savedInstanceState);
     }
 }
