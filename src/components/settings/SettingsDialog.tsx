@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import { useRef, useState, type ReactNode } from 'react'
+import { useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import {
   IconCatFace16,
   IconDarkOutline16,
@@ -20,6 +20,7 @@ import {
 } from '../../services/chat/backup.js'
 import { useIsMobile } from '../../app/viewport.js'
 import { useChatStore } from '../../services/chat/store.js'
+import { exportProfile, importProfile } from '../../services/backup/profile.js'
 import { filePick } from '../../services/chat/history/importSource.js'
 import { pickNativeArchive, supportsNativeArchive } from '../../services/chat/history/nativeArchive.js'
 import { formatSize } from '../../services/attachments.js'
@@ -165,6 +166,8 @@ const SettingsContent = () => {
           ) : (
             <>
               <ExportHistory disabled={historyBusy} />
+              <ExportProfile disabled={historyBusy} />
+              <ImportProfile disabled={historyBusy} />
               <SettingCell
                 label={t('deleteAllSessions')}
                 status={null}
@@ -793,6 +796,109 @@ const ExportHistory = ({ disabled }: { disabled: boolean }) => {
           <IconDownloadOutline16 />
           {t('exportAllDownload')}
         </Button>
+      }
+    />
+  )
+}
+
+/** 导出个性化备份：设置、记忆、人格预设与头像（不含对话与 API Key） */
+const ExportProfile = ({ disabled }: { disabled: boolean }) => {
+  const t = useTranslate()
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState<Status>(null)
+
+  const onExport = async () => {
+    setBusy(true)
+    setStatus(null)
+    try {
+      const { name, blob } = await exportProfile()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = name
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    } catch (error) {
+      setStatus(errorStatus('profileBackupExportFailed', error))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <SettingCell
+      label={t('profileBackupExport')}
+      description={t('profileBackupExportDescription')}
+      status={status}
+      action={
+        <Button
+          variant="outlined"
+          size="m"
+          className={styles.cellButton}
+          disabled={disabled || busy}
+          onClick={() => void onExport()}
+        >
+          <IconDownloadOutline16 />
+          {t('exportAllDownload')}
+        </Button>
+      }
+    />
+  )
+}
+
+/** 导入个性化备份：设置直接覆盖，记忆与人格按 id 合并，头像覆盖 */
+const ImportProfile = ({ disabled }: { disabled: boolean }) => {
+  const t = useTranslate()
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState<Status>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const onFiles = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) {
+      return
+    }
+    setBusy(true)
+    setStatus(null)
+    try {
+      const result = await importProfile(file)
+      setStatus({
+        key: 'profileBackupImported',
+        params: { memories: result.memories, presets: result.presets },
+      })
+    } catch {
+      setStatus({ key: 'profileBackupImportFailed', error: true })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <SettingCell
+      label={t('profileBackupImport')}
+      description={t('profileBackupImportDescription')}
+      status={status}
+      action={
+        <>
+          <Button
+            variant="outlined"
+            size="m"
+            className={styles.cellButton}
+            disabled={disabled || busy}
+            onClick={() => inputRef.current?.click()}
+          >
+            <IconUploadOutline14 />
+            {t('upload')}
+          </Button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".json,application/json"
+            hidden
+            onChange={(event) => void onFiles(event)}
+          />
+        </>
       }
     />
   )

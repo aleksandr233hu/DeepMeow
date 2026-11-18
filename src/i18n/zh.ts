@@ -378,6 +378,15 @@ export const zh = {
   sessionPinnedGroup: '置顶',
   sessionPin: '置顶',
   sessionUnpin: '取消置顶',
+  profileBackupExport: '导出个性化备份',
+  profileBackupExportDescription:
+    '包含长期记忆、人格预设、个性化设置与头像；不含对话与 API Key。',
+  profileBackupImport: '导入个性化备份',
+  profileBackupImportDescription:
+    '恢复记忆、人格与设置；已存在的条目跳过，现有数据保留。',
+  profileBackupImported: '已恢复设置、{memories} 条记忆、{presets} 个人格',
+  profileBackupImportFailed: '备份文件无效或格式不支持',
+  profileBackupExportFailed: '备份导出失败：{message}',
   updateSectionLabel: '检查更新',
   updateCurrent: '当前版本 {version}',
   updateChecking: '正在检查...',

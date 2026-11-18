@@ -392,6 +392,15 @@ export const en = {
   sessionPinnedGroup: 'Pinned',
   sessionPin: 'Pin',
   sessionUnpin: 'Unpin',
+  profileBackupExport: 'Export personal backup',
+  profileBackupExportDescription:
+    'Includes memories, personas, personalization settings and avatars; excludes chats and the API Key.',
+  profileBackupImport: 'Import personal backup',
+  profileBackupImportDescription:
+    'Restores memories, personas and settings; existing entries are skipped and current data is kept.',
+  profileBackupImported: 'Restored settings, {memories} memories and {presets} personas',
+  profileBackupImportFailed: 'Backup file is invalid or unsupported',
+  profileBackupExportFailed: 'Backup export failed: {message}',
   updateSectionLabel: 'Check for updates',
   updateCurrent: 'Current version {version}',
   updateChecking: 'Checking...',
