@@ -16,6 +16,8 @@ export type WebBundleManifest = {
   /** 网页包版本，例如 1.10.2.1 */
   version: string
   url: string
+  /** 备用下载地址（raw 不可达时再试） */
+  urlAlt?: string
   /** SHA-256（十六进制），下载后由原生层校验 */
   checksum: string
   /** 需要的最低 APK 版本；低于它时跳过网页更新 */
@@ -76,6 +78,7 @@ const parseManifest = (value: unknown): WebBundleManifest | null => {
   return {
     version: data.version,
     url: data.url,
+    urlAlt: typeof data.urlAlt === 'string' ? data.urlAlt : undefined,
     checksum: data.checksum.toLowerCase(),
     minAppVersion: typeof data.minAppVersion === 'string' ? data.minAppVersion : undefined,
     notes: typeof data.notes === 'string' ? data.notes : undefined,
@@ -123,14 +126,24 @@ export const checkWebUpdate = async (): Promise<WebCheckResult> => {
   }
 }
 
-/** 下载并设为下次启动生效；校验失败由原生层抛错 */
+/** 下载并设为下次启动生效；raw 失败时换镜像再试一次，校验失败由原生层抛错 */
 export const applyWebUpdate = async (info: WebBundleManifest): Promise<void> => {
-  await LiveUpdate.downloadBundle({
-    url: info.url,
-    bundleId: info.version,
-    checksum: info.checksum,
-  })
-  await LiveUpdate.setNextBundle({ bundleId: info.version })
+  const urls = [info.url, info.urlAlt].filter((url): url is string => Boolean(url))
+  let lastError: unknown
+  for (const url of urls) {
+    try {
+      await LiveUpdate.downloadBundle({
+        url,
+        bundleId: info.version,
+        checksum: info.checksum,
+      })
+      await LiveUpdate.setNextBundle({ bundleId: info.version })
+      return
+    } catch (error) {
+      lastError = error
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('web bundle download failed')
 }
 
 /** 应用可用后调用；返回是否刚从坏包回滚 */

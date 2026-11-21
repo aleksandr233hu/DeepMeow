@@ -56,6 +56,8 @@ writeFileSync(join(outDir, fileName), zipped)
 const manifest = {
   version,
   url: `https://raw.githubusercontent.com/aleksandr233hu/DeepMeow/web-bundles/${fileName}`,
+  // 备选镜像：raw 下载失败时再试（jsDelivr 对固定文件名缓存友好）
+  urlAlt: `https://cdn.jsdelivr.net/gh/aleksandr233hu/DeepMeow@web-bundles/${fileName}`,
   checksum,
   minAppVersion: appVersion,
   notes: process.env.WEB_BUNDLE_NOTES ?? '',
