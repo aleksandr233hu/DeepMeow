@@ -13,6 +13,7 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -84,6 +85,48 @@ public class AppUpdatePlugin extends Plugin {
                 call.resolve(ret);
             } catch (Exception error) {
                 call.reject("下载失败: " + error.getMessage(), error);
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+        }).start();
+    }
+
+    /** 原生 HTTP 拉取文本（网页热更清单），不走 WebView 的 CORS 与网络策略。 */
+    @PluginMethod
+    public void fetchText(PluginCall call) {
+        String url = call.getString("url");
+        if (url == null || url.isEmpty()) {
+            call.reject("缺少请求地址");
+            return;
+        }
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                connection = (HttpURLConnection) new URL(url).openConnection();
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(20000);
+                connection.setInstanceFollowRedirects(true);
+                connection.setRequestProperty("Accept", "application/json");
+                int code = connection.getResponseCode();
+                if (code != HttpURLConnection.HTTP_OK) {
+                    call.reject("请求失败：HTTP " + code);
+                    return;
+                }
+                try (InputStream input = connection.getInputStream()) {
+                    ByteArrayOutputStream output = new ByteArrayOutputStream();
+                    byte[] buffer = new byte[16 * 1024];
+                    int read;
+                    while ((read = input.read(buffer)) != -1) {
+                        output.write(buffer, 0, read);
+                    }
+                    JSObject ret = new JSObject();
+                    ret.put("text", output.toString("UTF-8"));
+                    call.resolve(ret);
+                }
+            } catch (Exception error) {
+                call.reject("请求失败: " + error.getMessage(), error);
             } finally {
                 if (connection != null) {
                     connection.disconnect();

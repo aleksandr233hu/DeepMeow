@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core'
 import { LiveUpdate } from '@capawesome/capacitor-live-update'
-import { isNewerVersion } from './update.js'
+import { fetchRemoteText, isNewerVersion } from './update.js'
 
 /**
  * 网页资源热更新：内置资源作为兜底，下载的新包在下次启动生效。
@@ -87,17 +87,18 @@ export const checkWebUpdate = async (): Promise<WebCheckResult> => {
   if (!supportsLiveUpdate()) {
     return { status: 'unsupported' }
   }
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 12000)
   try {
-    const response = await fetch(MANIFEST_URL, {
-      signal: controller.signal,
-      cache: 'no-store',
-    })
-    if (!response.ok) {
+    const text = await fetchRemoteText(MANIFEST_URL)
+    if (!text) {
       return { status: 'error' }
     }
-    const manifest = parseManifest(await response.json())
+    let raw: unknown
+    try {
+      raw = JSON.parse(text)
+    } catch {
+      return { status: 'error' }
+    }
+    const manifest = parseManifest(raw)
     if (!manifest) {
       return { status: 'error' }
     }
@@ -119,8 +120,6 @@ export const checkWebUpdate = async (): Promise<WebCheckResult> => {
     return { status: 'update', info: manifest, current }
   } catch {
     return { status: 'error' }
-  } finally {
-    clearTimeout(timer)
   }
 }
 

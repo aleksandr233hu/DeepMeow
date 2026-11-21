@@ -3,6 +3,7 @@ import { Capacitor, registerPlugin } from '@capacitor/core'
 /** 原生更新插件，见 android 工程的 AppUpdatePlugin。 */
 type AppUpdateNative = {
   getVersion: () => Promise<{ versionName: string; versionCode: number }>
+  fetchText: (options: { url: string }) => Promise<{ text: string }>
   download: (options: { url: string }) => Promise<{ path: string; size: number }>
   install: (options: { path: string }) => Promise<void>
   addListener: (
@@ -26,6 +27,18 @@ export type UpdateInfo = {
 
 export const supportsInAppUpdate = () =>
   Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android'
+
+/** 原生 HTTP 拉取文本：WebView 的 fetch 在部分网络下会被 CORS/网络策略拦住 */
+export const fetchRemoteText = async (url: string): Promise<string | null> => {
+  if (!supportsInAppUpdate()) {
+    return null
+  }
+  try {
+    return (await AppUpdate.fetchText({ url })).text
+  } catch {
+    return null
+  }
+}
 
 export const readCurrentVersion = async (): Promise<string> => {
   if (!supportsInAppUpdate()) {
