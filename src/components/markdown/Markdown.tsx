@@ -35,7 +35,7 @@ export const Markdown = memo(function Markdown({
   return ast ? (
     <MarkdownAstRenderer
       key={cacheKey}
-      className={className}
+      className={loading ? `${className ?? ''} ds-streaming` : className}
       ast={ast}
       loading={loading}
       onUpdate={scrollToBottom}

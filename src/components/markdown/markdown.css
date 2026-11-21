@@ -378,3 +378,35 @@
   color: var(--dsw-alias-label-secondary);
   font-size: 14px;
 }
+
+/* 生成中的流式光标：正文末尾的小爪印，随文字推进 */
+.ds-streaming > :last-child::after {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 3px;
+  vertical-align: -1px;
+  background-color: currentColor;
+  content: '';
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg fill='black'%3E%3Cellipse cx='8' cy='10.2' rx='3.4' ry='2.9'/%3E%3Cellipse cx='3.6' cy='6.4' rx='1.35' ry='1.7' transform='rotate(-20 3.6 6.4)'/%3E%3Cellipse cx='6.5' cy='4.1' rx='1.35' ry='1.8'/%3E%3Cellipse cx='9.5' cy='4.1' rx='1.35' ry='1.8'/%3E%3Cellipse cx='12.4' cy='6.4' rx='1.35' ry='1.7' transform='rotate(20 12.4 6.4)'/%3E%3C/g%3E%3C/svg%3E")
+    no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg fill='black'%3E%3Cellipse cx='8' cy='10.2' rx='3.4' ry='2.9'/%3E%3Cellipse cx='3.6' cy='6.4' rx='1.35' ry='1.7' transform='rotate(-20 3.6 6.4)'/%3E%3Cellipse cx='6.5' cy='4.1' rx='1.35' ry='1.8'/%3E%3Cellipse cx='9.5' cy='4.1' rx='1.35' ry='1.8'/%3E%3Cellipse cx='12.4' cy='6.4' rx='1.35' ry='1.7' transform='rotate(20 12.4 6.4)'/%3E%3C/g%3E%3C/svg%3E")
+    no-repeat center / contain;
+  animation: paw-blink 1s steps(2, start) infinite;
+}
+
+@keyframes paw-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-streaming > :last-child::after {
+    animation: none;
+  }
+}

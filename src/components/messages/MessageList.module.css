@@ -42,11 +42,12 @@
 
 .scrollTopIcon {
   display: flex;
-  transform: rotate(180deg);
 }
 
+/* 向下猫爪：爪印倒过来 */
 .scrollBottomIcon {
   display: flex;
+  transform: rotate(180deg);
 }
 
 @media not all and (min-width: 768px) {

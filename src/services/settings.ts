@@ -28,6 +28,8 @@ export type MessageLayout = 'classic' | 'bubble'
 /** 本机设置，存 localStorage：API Key、语言、主题、位置、朗读音色、深度思考与智能搜索开关、侧边栏收起状态，以及个性化配置 */
 type Settings = {
   apiKey: string | null
+  /** 首次保存 API Key 的时间，用于「猫窝日记」计算养了几天 */
+  firstApiKeyAt: number | null
   locale: Locale
   themePreference: ThemePreference
   location: UserLocation | null
@@ -70,6 +72,7 @@ type Settings = {
 
 const KEYS = {
   apiKey: 'chat-demo:api-key',
+  firstApiKeyAt: 'chat-demo:first-api-key-at',
   locale: 'chat-demo:locale',
   location: 'chat-demo:location',
   themePreference: 'chat-demo:theme-preference',
@@ -242,6 +245,7 @@ const initialMessageLayout = (): MessageLayout =>
 
 export const useSettings = create<Settings>(() => ({
   apiKey: read(KEYS.apiKey),
+  firstApiKeyAt: Number(read(KEYS.firstApiKeyAt)) || null,
   locale: initialLocale(),
   location: initialLocation(),
   themePreference: initialThemePreference(),
@@ -295,7 +299,19 @@ export const setTtsVoice = (ttsVoice: TtsVoice) => {
 
 export const setApiKey = (apiKey: string | null) => {
   write(KEYS.apiKey, apiKey)
+  if (apiKey && useSettings.getState().firstApiKeyAt === null) {
+    const now = Date.now()
+    write(KEYS.firstApiKeyAt, String(now))
+    useSettings.setState({ apiKey, firstApiKeyAt: now })
+    return
+  }
   useSettings.setState({ apiKey })
+}
+
+/** 老用户没有记录首次接入时间时，用最早会话时间补一次 */
+export const setFirstApiKeyAt = (time: number) => {
+  write(KEYS.firstApiKeyAt, String(time))
+  useSettings.setState({ firstApiKeyAt: time })
 }
 
 export const setThinking = (thinking: boolean) => {

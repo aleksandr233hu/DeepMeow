@@ -1,6 +1,6 @@
 {
   "name": "deepmeow",
-  "version": "1.10.1",
+  "version": "1.10.2",
   "description": "DeepMeow：使用自己的 API Key、数据完全本地的聊天客户端。",
   "license": "MIT",
   "private": true,
@@ -16,6 +16,7 @@
   "dependencies": {
     "@capacitor/android": "^8.6.2",
     "@capacitor/core": "^8.6.2",
+    "@capawesome/capacitor-live-update": "8.8.2",
     "@types/katex": "^0.16.5",
     "@types/mdast": "~4.0.3",
     "@types/prismjs": "^1.26.1",

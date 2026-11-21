@@ -13,3 +13,6 @@ release/
 
 # 私人素材：仅本地保留，不进入仓库
 resources/app-icon-source.jpg
+
+# 网页热更新包：只推送到 web-bundles 分支，不进入 main
+web-bundles/

@@ -5,6 +5,7 @@ import {
   IconCheckOutline16,
   IconEditOutline16,
   IconEllipsisOutline16,
+  IconPaw16,
   IconTrashOutline16,
 } from '../base/icons.js'
 import {
@@ -102,6 +103,7 @@ export const SessionItem = memo(function SessionItem({
               {
                 key: 'pin',
                 label: session.pinned ? t('sessionUnpin') : t('sessionPin'),
+                icon: <IconPaw16 />,
                 onSelect: () => setSessionPinned(session.id, !session.pinned),
               },
               {

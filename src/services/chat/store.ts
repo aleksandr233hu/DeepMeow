@@ -6,6 +6,7 @@ import type { ChatModel, CreateMessageRequest } from '../api/types.js'
 import { extractFileIds, getFileErrorCode, isRetryableApiError } from '../api/errors.js'
 import { cancelUpload, describeUploadError, uploadAttachment, useUploads } from '../attachments.js'
 import { extractMemories } from '../memory/extract.js'
+import { recordQuestion } from '../stats/diary.js'
 import { enabledMemoryTexts } from '../memory/store.js'
 import { resolvePreset } from '../presets/store.js'
 import { resolveStyleProfile } from '../style/resolve.js'
@@ -740,6 +741,7 @@ export const sendMessage = (targetSessionId: string | null) => {
     ...appendBranch(session, history.at(-1)?.id ?? null, [question, reply]),
     updatedAt: now,
   }))
+  recordQuestion(now)
   if (files.length > 0) {
     pendingFiles.set(sessionId, [
       ...(pendingFiles.get(sessionId) ?? []),

@@ -14,6 +14,15 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
   },
+  plugins: {
+    // 网页资源热更新：启动 15 秒内没有调用 ready() 时自动回滚到内置资源
+    LiveUpdate: {
+      readyTimeout: 15000,
+      autoUpdateStrategy: 'none',
+      autoDeleteBundles: true,
+      autoBlockRolledBackBundles: true,
+    },
+  },
 }
 
 export default config

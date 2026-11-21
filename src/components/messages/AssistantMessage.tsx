@@ -196,7 +196,7 @@ export const AssistantMessage = memo(function AssistantMessage({
     >
       {showAvatars ? (
         <span className={styles.avatarSlot}>
-          <MessageAvatar role="assistant" />
+          <MessageAvatar role="assistant" thinking={streaming} />
         </span>
       ) : null}
       {refused ? null : (

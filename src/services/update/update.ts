@@ -56,6 +56,10 @@ const isNewer = (latest: number[], current: number[]): boolean => {
   return false
 }
 
+/** 按数字段比较版本：latest 比 current 新时返回 true */
+export const isNewerVersion = (latest: string, current: string): boolean =>
+  isNewer(versionParts(latest), versionParts(current))
+
 type ReleaseAsset = { name?: string; size?: number; browser_download_url?: string }
 
 export type CheckResult =

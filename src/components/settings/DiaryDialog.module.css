@@ -1,0 +1,125 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hint {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.scanBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px dashed var(--dsw-alias-border-l2);
+  border-radius: 12px;
+}
+
+.intro {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.progress {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--dsw-alias-brand-primary);
+}
+
+.failed {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.scanActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background-color: var(--dsw-alias-bg-layer-2);
+}
+
+.cardValue {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+  color: var(--dsw-alias-brand-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.cardLabel {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.chartTitle {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 88px;
+  padding: 8px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 10px;
+  background-color: var(--dsw-alias-bg-layer-2);
+}
+
+.bar,
+.barActive {
+  flex: 1;
+  min-width: 0;
+  border-radius: 2px 2px 0 0;
+  background-color: var(--dsw-alias-interactive-bg-hover);
+}
+
+.barActive {
+  background-color: var(--dsw-alias-brand-primary);
+}
+
+.chartAxis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -8px;
+  padding: 0 10px;
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.footerHint {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+.rescan {
+  display: flex;
+  justify-content: flex-end;
+}

@@ -471,6 +471,19 @@ export const IconPaw16 = () => (
   </svg>
 )
 
+/** 猫尾巴：置顶组标题旁的小装饰 */
+export const IconCatTail16 = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path
+      d="M2.4 13.2c4.6.9 7.7-1.5 7.7-4.6 0-2.2-1.7-3.9-3.8-3.9"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+    />
+    <circle cx="6.3" cy="4.7" r="1.5" fill="currentColor" />
+  </svg>
+)
+
 export const IconCatFace16 = () => (
   <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path

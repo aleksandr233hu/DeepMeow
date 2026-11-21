@@ -66,6 +66,30 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const togglesRef = useRef<HTMLDivElement>(null)
   const [uploadSheetOpen, setUploadSheetOpen] = useState(false)
+  // 输入为空时长按发送键：猫伸个懒腰，不发送
+  const [stretching, setStretching] = useState(false)
+  const stretchStart = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const stretchEnd = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const clearStretch = () => {
+    if (stretchStart.current) {
+      clearTimeout(stretchStart.current)
+      stretchStart.current = null
+    }
+    if (stretchEnd.current) {
+      clearTimeout(stretchEnd.current)
+      stretchEnd.current = null
+    }
+  }
+  const startStretch = () => {
+    if (canSend) {
+      return
+    }
+    clearStretch()
+    stretchStart.current = setTimeout(() => {
+      setStretching(true)
+      stretchEnd.current = setTimeout(() => setStretching(false), 1200)
+    }, 500)
+  }
 
   useLayoutEffect(() => {
     const toggles = togglesRef.current
@@ -317,9 +341,18 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
           ) : (
             <button
               type="button"
-              className={clsx(styles.sendButton, !canSend && styles.disabled)}
+              className={clsx(
+                styles.sendButton,
+                !canSend && styles.disabled,
+                stretching && styles.sendStretching
+              )}
               aria-label={t('send')}
               aria-disabled={!canSend}
+              onPointerDown={startStretch}
+              onPointerUp={clearStretch}
+              onPointerLeave={clearStretch}
+              onPointerCancel={clearStretch}
+              onContextMenu={(event) => event.preventDefault()}
               onClick={send}
             >
               <IconSendOutline16 />

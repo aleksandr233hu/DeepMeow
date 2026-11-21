@@ -230,7 +230,8 @@ export const MemorySection = () => {
       <div className={styles.addBox}>
         <textarea
           className={styles.textarea}
-          rows={2}
+          rows={3}
+          maxLength={2000}
           value={text}
           placeholder={t('memoryAddPlaceholder')}
           onChange={(event) => setText(event.target.value)}
@@ -275,7 +276,8 @@ export const MemorySection = () => {
                   <div className={styles.editor}>
                     <textarea
                       className={styles.textarea}
-                      rows={3}
+                      rows={4}
+                      maxLength={2000}
                       value={draft}
                       autoFocus
                       onChange={(event) => setDraft(event.target.value)}

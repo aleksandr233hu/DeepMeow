@@ -81,15 +81,12 @@ export const PresetsSection = () => {
         action={
           <Select
             ariaLabel={t('presetDefault')}
-            value={defaultPresetId ?? ''}
-            options={[
-              { value: '', label: t('presetFollowBuiltin') },
-              ...presets.map((preset) => ({
-                value: preset.id,
-                label: preset.name,
-              })),
-            ]}
-            onChange={(value) => setDefaultPresetId(value || null)}
+            value={defaultPresetId ?? 'builtin-general'}
+            options={presets.map((preset) => ({
+              value: preset.id,
+              label: preset.name,
+            }))}
+            onChange={(value) => setDefaultPresetId(value)}
           />
         }
       />

@@ -49,6 +49,7 @@ import { Select } from '../base/Select.js'
 import { showToast } from '../base/toastState.js'
 import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
 import { ChatSection } from './ChatSection.js'
+import { DiarySection } from './DiaryDialog.js'
 import { ConnectionTest } from './ConnectionTest.js'
 import { useHistoryImport } from './historyImportState.js'
 import { MemorySection } from './MemorySection.js'
@@ -176,6 +177,7 @@ const SettingsContent = () => {
               <TtsVoiceSetting />
               <LocationSetting />
               <UpdateSection />
+              <DiarySection />
               {isMobile ? <ApiKeyConfirm editor={apiKeyEditor} /> : null}
             </>
           ) : section === 'chat' ? (

@@ -23,7 +23,32 @@
   margin-top: 14px;
 }
 
+/* 下载时猫叼着猫粮袋，随着进度轻轻起伏 */
+.progressHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressIcon {
+  display: flex;
+  flex-shrink: 0;
+  animation: cat-carry 1.2s ease-in-out infinite;
+}
+
+@keyframes cat-carry {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
 .track {
+  flex: 1;
+  min-width: 0;
   height: 6px;
   overflow: hidden;
   border-radius: 3px;

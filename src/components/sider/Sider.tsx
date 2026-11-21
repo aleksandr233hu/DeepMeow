@@ -1,10 +1,11 @@
 import clsx from 'clsx'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslate } from '../../i18n/index.js'
 import {
   IconEllipsisOutline16,
   IconNewChatOutline16,
   IconPanelLeftOutline16,
+  IconCatTail16,
   IconPaw16,
   IconSelectOutline16,
   IconSettingsOutline16,
@@ -196,6 +197,18 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
     }
   }
 
+  // 连点 5 次侧栏 logo：猫打个哈欠
+  const brandClicks = useRef<number[]>([])
+  const [brandYawn, setBrandYawn] = useState(false)
+  const onBrandClick = () => {
+    const now = Date.now()
+    brandClicks.current = [...brandClicks.current.filter((time) => now - time < 1500), now]
+    if (brandClicks.current.length >= 5) {
+      brandClicks.current = []
+      setBrandYawn(true)
+      window.setTimeout(() => setBrandYawn(false), 1400)
+    }
+  }
   const [groupDialog, setGroupDialog] = useState<{
     id: string | null
     name: string
@@ -284,11 +297,15 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
   return (
     <div className={clsx(styles.sider, mobile && styles.mobile)}>
       <div className={styles.top}>
-        <div className={styles.brand}>
+        <div
+          className={clsx(styles.brand, brandYawn && styles.brandYawn)}
+          onClick={onBrandClick}
+        >
           <span className={styles.brandPaw}>
             <IconPaw16 />
           </span>
           <div className={styles.appName}>{t('appName')}</div>
+          {brandYawn ? <span className={styles.yawnBubble}>{t('brandYawn')}</span> : null}
         </div>
         <IconButton
           size="m"
@@ -341,7 +358,12 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
                 aria-expanded={pinnedOpen}
                 onClick={() => setPinnedOpen((value) => !value)}
               >
-                <span>{t('sessionPinnedGroup')}</span>
+                <span className={styles.pinnedLabel}>
+                  {t('sessionPinnedGroup')}
+                  <span className={styles.pinnedTail} aria-hidden>
+                    <IconCatTail16 />
+                  </span>
+                </span>
                 <span className={styles.sectionChevron}>{pinnedOpen ? '▾' : '▸'}</span>
               </button>
               {pinnedOpen ? pinnedSessions.map(renderSession) : null}

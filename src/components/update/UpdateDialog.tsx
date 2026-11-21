@@ -57,11 +57,23 @@ export const UpdateDialog = () => {
       <div className={styles.notes}>{info.notes || t('updateNoNotes')}</div>
       {downloading || ready ? (
         <div className={styles.progress}>
-          <div className={styles.track}>
-            <div
-              className={styles.fill}
-              style={{ width: `${percent ?? 0}%` }}
-            />
+          <div className={styles.progressHead}>
+            <span className={styles.progressIcon} aria-hidden>
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <path d="M5 7h12l-1.2 12H6.2L5 7Z" fill="#E9AE45" />
+                <path d="M5 7h12l-.3 3H5.3L5 7Z" fill="#D99A32" />
+                <path d="M6.5 5.5h9" stroke="#8A9AAE" strokeWidth="1.6" strokeLinecap="round" />
+                <circle cx="11" cy="13.4" r="1.5" fill="#FAF7F2" />
+                <circle cx="8.7" cy="11.4" r="0.9" fill="#FAF7F2" />
+                <circle cx="13.3" cy="11.4" r="0.9" fill="#FAF7F2" />
+              </svg>
+            </span>
+            <div className={styles.track}>
+              <div
+                className={styles.fill}
+                style={{ width: `${percent ?? 0}%` }}
+              />
+            </div>
           </div>
           <div className={styles.hint}>
             {ready

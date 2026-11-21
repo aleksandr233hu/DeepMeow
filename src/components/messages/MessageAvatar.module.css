@@ -4,6 +4,31 @@
   flex-shrink: 0;
 }
 
+/* 思考/生成中：整只头像轻微摆动，比转圈更有生命感 */
+.wrap[data-thinking='true'] {
+  animation: cat-sway 1.2s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+
+@keyframes cat-sway {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+  25% {
+    transform: translateX(-2px) rotate(-2deg);
+  }
+  75% {
+    transform: translateX(2px) rotate(2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrap[data-thinking='true'] {
+    animation: none;
+  }
+}
+
 /* 猫耳画在头像后面，底边压进圆形头像内部，避免接缝处露出细缝 */
 .ears {
   position: absolute;

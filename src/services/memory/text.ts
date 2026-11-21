@@ -15,4 +15,4 @@ export const MAX_MEMORY_CHARS = 300
 export const MAX_SUMMARY_CHARS = 2000
 
 export const memoryCharLimit = (source: MemorySource) =>
-  source === 'summary' ? MAX_SUMMARY_CHARS : MAX_MEMORY_CHARS
+  source === 'auto' ? MAX_MEMORY_CHARS : MAX_SUMMARY_CHARS

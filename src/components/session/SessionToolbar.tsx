@@ -16,6 +16,7 @@ import {
   IconCheckOutline16,
   IconDownloadOutline16,
   IconEllipsisOutline16,
+  IconPaw16,
   IconThinkOutline16,
 } from '../base/icons.js'
 import { showToast } from '../base/toastState.js'
@@ -121,6 +122,7 @@ export const SessionToolbar = ({
           {
             key: 'pin',
             label: session.pinned ? t('sessionUnpin') : t('sessionPin'),
+            icon: <IconPaw16 />,
             onSelect: () => setSessionPinned(session.id, !session.pinned),
           },
           {

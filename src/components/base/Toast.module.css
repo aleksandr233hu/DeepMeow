@@ -26,6 +26,7 @@
 }
 
 /* 带图标时图标在左、文字左对齐，整体仍居中 */
+.withIcon,
 .error {
   display: flex;
   text-align: left;
@@ -40,6 +41,11 @@
   /* 与首行文字居中：(22 - 16) / 2 */
   margin-top: 3px;
   color: var(--dsw-alias-state-error-primary);
+}
+
+/* 成功/中性提示用品牌色小爪印 */
+.paw {
+  color: var(--dsw-alias-brand-primary);
 }
 
 /* 整条提示不拦截点击，只有链接与操作按钮可点 */

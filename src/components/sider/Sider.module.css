@@ -62,6 +62,46 @@
   color: var(--dsw-alias-brand-primary);
 }
 
+/* 连点 5 次 logo：猫打个哈欠 */
+.brandYawn .brandPaw {
+  animation: cat-yawn 1.2s ease-in-out;
+}
+
+.yawnBubble {
+  position: absolute;
+  top: -8px;
+  left: 42px;
+  padding: 1px 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 100px;
+  background-color: var(--dsw-alias-bg-layer-3);
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-secondary);
+  animation: bubble-pop 0.2s ease-out;
+  pointer-events: none;
+}
+
+@keyframes cat-yawn {
+  0%,
+  100% {
+    transform: none;
+  }
+  30% {
+    transform: translateY(-3px) rotate(-18deg) scale(1.08);
+  }
+  60% {
+    transform: translateY(1px) rotate(10deg);
+  }
+}
+
+@keyframes bubble-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
 .appName {
   min-width: 0;
   padding-left: 2px;
@@ -158,6 +198,24 @@
 }
 
 /* 置顶分组的标题是可点击的折叠按钮，外观与普通分组标题一致 */
+.pinnedLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 置顶标题旁的小尾巴 */
+.pinnedTail {
+  display: flex;
+  color: var(--dsw-alias-brand-primary);
+  opacity: 0.75;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 .sectionToggle {
   display: flex;
   align-items: center;

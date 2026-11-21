@@ -16,6 +16,7 @@ import {
 import { SearchPanel } from '../components/search/SearchPanel.js'
 import { UpdateDialog } from '../components/update/UpdateDialog.js'
 import { useUpdateStore } from '../services/update/updateState.js'
+import { markAppReady } from '../services/update/liveUpdate.js'
 import { closeSearchPanel } from '../components/search/searchPanelState.js'
 import { SessionView } from '../components/session/SessionView.js'
 import { SessionSettingsDialog } from '../components/session/SessionSettingsDialog.js'
@@ -87,11 +88,75 @@ export const App = () => {
   }, [])
 
   useEffect(() => {
-    const { init, autoCheck } = useUpdateStore.getState()
+    const { init, autoCheck, initWeb, autoCheckWeb } = useUpdateStore.getState()
     void init()
+    void initWeb()
+    // 告诉热更新插件当前包能正常启动；刚从坏包回滚时提示一次
+    void markAppReady().then((rollback) => {
+      if (rollback) {
+        showToast({ key: 'webUpdateRollback' })
+      }
+    })
     // 延后检查更新：避开启动时的数据加载与首屏渲染，失败时静默
-    const timer = setTimeout(() => void autoCheck(), 4000)
+    const timer = setTimeout(() => {
+      void autoCheck()
+      void autoCheckWeb()
+    }, 4000)
     return () => clearTimeout(timer)
+  }, [])
+
+  // 深夜连续使用 40 分钟提醒一次（每天最多一次；切后台暂停，长时间离开会重新计时）
+  useEffect(() => {
+    const STORAGE_KEY = 'deepmeow:night-reminder-day'
+    const THRESHOLD = 40 * 60 * 1000
+    const BREAK = 10 * 60 * 1000
+    const isNight = (date: Date) => date.getHours() >= 22 || date.getHours() < 6
+    const dayKey = (date: Date) =>
+      `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+    let accumulated = 0
+    let lastTick = Date.now()
+    let hiddenAt: number | null = null
+
+    const tick = () => {
+      const now = Date.now()
+      if (document.visibilityState === 'hidden') {
+        hiddenAt = now
+        lastTick = now
+        return
+      }
+      if (hiddenAt !== null) {
+        if (now - hiddenAt > BREAK) {
+          accumulated = 0
+        }
+        hiddenAt = null
+      }
+      const date = new Date(now)
+      if (!isNight(date)) {
+        accumulated = 0
+        lastTick = now
+        return
+      }
+      accumulated += now - lastTick
+      lastTick = now
+      const key = dayKey(date)
+      try {
+        if (accumulated >= THRESHOLD && localStorage.getItem(STORAGE_KEY) !== key) {
+          localStorage.setItem(STORAGE_KEY, key)
+          showToast({ key: 'nightReminder' })
+          accumulated = 0
+        }
+      } catch {
+        // 存储不可用时静默
+      }
+    }
+
+    const timer = setInterval(tick, 30_000)
+    const onVisibility = () => tick()
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [])
 
   return (

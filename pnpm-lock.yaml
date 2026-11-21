@@ -14,6 +14,9 @@ importers:
       '@capacitor/core':
         specifier: ^8.6.2
         version: 8.6.2
+      '@capawesome/capacitor-live-update':
+        specifier: 8.8.2
+        version: 8.8.2(@capacitor/core@8.6.2)
       '@types/katex':
         specifier: ^0.16.5
         version: 0.16.8
@@ -129,6 +132,24 @@ packages:
 
   '@capacitor/core@8.6.2':
     resolution: {integrity: sha512-UEb9crRuqEAe2Iu2eGOEuQ8rLQxpwg7ZZIpl17UJoytEpnV1e4oXXW0K7yYS2NsCOGmJjyLeKjNlgG7tkAoX8g==}
+
+  '@capawesome/capacitor-live-update@8.8.2':
+    resolution: {integrity: sha512-Hyd4I5p+ZLZeU60oRMA61qFwY7AdKQS/isV3HbX2hC2jIztHdsx/uLaLjI4avR6LTHgwVhWIaC8qRNviLLDyIA==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+      '@capawesome/capacitor-electron': '>=0.2.0'
+    peerDependenciesMeta:
+      '@capawesome/capacitor-electron':
+        optional: true
+
+  '@capawesome/electron-live-update@0.1.0':
+    resolution: {integrity: sha512-1qTEO8SzNplSfj53PkvrmV+5s+t86dZeYzjbsswCqSEhXIzg0TUsrBmWCueRgjGcOXb0Iu3AYi6pKekKQi9XTw==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      electron: '>=28.0.0'
+    peerDependenciesMeta:
+      electron:
+        optional: true
 
   '@chevrotain/cst-dts-gen@11.0.3':
     resolution: {integrity: sha512-BvIKpRLeS/8UbfxXxgC33xOumsacaeCKAjAeLyOn7Pcp95HiRbrpl14S+9vaZLolnbssPIUuiUd8IvgkRyt6NQ==}
@@ -1712,6 +1733,10 @@ packages:
   yauzl@2.10.0:
     resolution: {integrity: sha512-p4a9I6X6nu6IhoGmBqAcbJy1mlC4j27vEPZX9F4L4/vZT3Lyq1VkFHw/V/PUcB9Buo+DG3iHkT0x3Qya58zc3g==}
 
+  yauzl@3.4.0:
+    resolution: {integrity: sha512-jIH9yLR9wqr0wOS0TpBvo/g/2UgZH5qePVbjgRliiF0BYvOZyaBknKsF+x9Iht0O6sqgnB93rCICdOZFecJuDw==}
+    engines: {node: '>=12'}
+
   zustand@4.4.7:
     resolution: {integrity: sha512-QFJWJMdlETcI69paJwhSMJz7PPWjVP8Sjhclxmxmxv/RYI7ZOvR5BHX+ktH0we9gTWQMxcne8q1OY8xxz604gw==}
     engines: {node: '>=12.7.0'}
@@ -1771,6 +1796,17 @@ snapshots:
   '@capacitor/core@8.6.2':
     dependencies:
       tslib: 2.9.1
+
+  '@capawesome/capacitor-live-update@8.8.2(@capacitor/core@8.6.2)':
+    dependencies:
+      '@capacitor/core': 8.6.2
+      '@capawesome/electron-live-update': 0.1.0
+    transitivePeerDependencies:
+      - electron
+
+  '@capawesome/electron-live-update@0.1.0':
+    dependencies:
+      yauzl: 3.4.0
 
   '@chevrotain/cst-dts-gen@11.0.3':
     dependencies:
@@ -3476,6 +3512,10 @@ snapshots:
     dependencies:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
+
+  yauzl@3.4.0:
+    dependencies:
+      pend: 1.2.0
 
   zustand@4.4.7(@types/react@18.3.31)(react@18.3.1):
     dependencies:

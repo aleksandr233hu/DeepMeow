@@ -8,7 +8,7 @@ import {
 } from '../../services/chat/branches.js'
 import { selectMessageVersion } from '../../services/chat/store.js'
 import type { Session } from '../../services/chat/types.js'
-import { IconChevronDownOutline14 } from '../base/icons.js'
+import { IconPaw16 } from '../base/icons.js'
 import { closeSearchPanel } from '../search/searchPanelState.js'
 import { AssistantMessage } from './AssistantMessage.js'
 import { CompressionCard } from './CompressionCard.js'
@@ -231,7 +231,7 @@ export const MessageList = ({
             onClick={scrollToTop}
           >
             <span className={styles.scrollTopIcon}>
-              <IconChevronDownOutline14 />
+              <IconPaw16 />
             </span>
           </button>
         ) : null}
@@ -243,7 +243,7 @@ export const MessageList = ({
             onClick={jumpToBottom}
           >
             <span className={styles.scrollBottomIcon}>
-              <IconChevronDownOutline14 />
+              <IconPaw16 />
             </span>
           </button>
         ) : null}

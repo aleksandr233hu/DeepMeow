@@ -1,6 +1,6 @@
 import clsx from 'clsx'
 import { useTranslate } from '../../i18n/index.js'
-import { IconToastError16 } from './icons.js'
+import { IconPaw16, IconToastError16 } from './icons.js'
 import { useToast } from './toastState.js'
 import styles from './Toast.module.css'
 
@@ -19,12 +19,14 @@ export const Toast = () => {
   }
   const error = message.type === 'error'
   return (
-    <div key={id} className={clsx(styles.toast, error && styles.error)} role="status">
-      {error ? (
-        <span className={styles.icon}>
-          <IconToastError16 />
-        </span>
-      ) : null}
+    <div
+      key={id}
+      className={clsx(styles.toast, styles.withIcon, error && styles.error)}
+      role="status"
+    >
+      <span className={clsx(styles.icon, !error && styles.paw)}>
+        {error ? <IconToastError16 /> : <IconPaw16 />}
+      </span>
       <span className={styles.content}>
         {t(message.key, message.params)}
         {message.link ? (
