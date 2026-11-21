@@ -20,6 +20,7 @@ import {
   IconThinkOutline16,
 } from '../base/icons.js'
 import { showToast } from '../base/toastState.js'
+import { SaveCancelled, saveBlob } from '../../services/files/saveFile.js'
 import styles from './SessionToolbar.module.css'
 
 const safeFileName = (title: string) =>
@@ -69,20 +70,20 @@ export const SessionToolbar = ({
     try {
       const { exportArchive } = await import('../../services/chat/history/exportArchive.js')
       const blob = await exportArchive([session])
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${safeFileName(session.title)}-${new Date()
-        .toISOString()
-        .slice(0, 10)}.zip`
-      link.click()
-      setTimeout(() => URL.revokeObjectURL(url), 10_000)
-    } catch (error) {
-      showToast({
-        key: 'exportSessionFailed',
-        params: { message: error instanceof Error ? error.message : String(error) },
-        type: 'error',
+      await saveBlob({
+        blob,
+        fileName: `${safeFileName(session.title)}-${new Date().toISOString().slice(0, 10)}.zip`,
+        mimeType: 'application/zip',
       })
+      showToast({ key: 'sessionExported' })
+    } catch (error) {
+      if (!(error instanceof SaveCancelled)) {
+        showToast({
+          key: 'exportSessionFailed',
+          params: { message: error instanceof Error ? error.message : String(error) },
+          type: 'error',
+        })
+      }
     } finally {
       setExporting(false)
     }

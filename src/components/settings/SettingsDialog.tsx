@@ -21,6 +21,7 @@ import {
 import { useIsMobile } from '../../app/viewport.js'
 import { useChatStore } from '../../services/chat/store.js'
 import { exportProfile, importProfile } from '../../services/backup/profile.js'
+import { SaveCancelled, saveBlob } from '../../services/files/saveFile.js'
 import { filePick } from '../../services/chat/history/importSource.js'
 import { pickNativeArchive, supportsNativeArchive } from '../../services/chat/history/nativeArchive.js'
 import { formatSize } from '../../services/attachments.js'
@@ -792,14 +793,16 @@ const ExportHistory = ({ disabled }: { disabled: boolean }) => {
     setStatus(null)
     try {
       const { name, blob } = await exportHistory()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = name
-      link.click()
-      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      await saveBlob({
+        blob,
+        fileName: name,
+        mimeType: 'application/zip',
+        onProgress: (ratio) =>
+          setStatus({ key: 'exportSaving', params: { percent: Math.round(ratio * 100) } }),
+      })
+      setStatus({ key: 'historyExported' })
     } catch (error) {
-      setStatus(errorStatus('historyExportFailed', error))
+      setStatus(error instanceof SaveCancelled ? null : errorStatus('historyExportFailed', error))
     } finally {
       setBusy(false)
     }
@@ -837,14 +840,16 @@ const ExportProfile = ({ disabled }: { disabled: boolean }) => {
     setStatus(null)
     try {
       const { name, blob } = await exportProfile()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = name
-      link.click()
-      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+      await saveBlob({
+        blob,
+        fileName: name,
+        mimeType: 'application/json',
+        onProgress: (ratio) =>
+          setStatus({ key: 'exportSaving', params: { percent: Math.round(ratio * 100) } }),
+      })
+      setStatus({ key: 'profileBackupExported' })
     } catch (error) {
-      setStatus(errorStatus('profileBackupExportFailed', error))
+      setStatus(error instanceof SaveCancelled ? null : errorStatus('profileBackupExportFailed', error))
     } finally {
       setBusy(false)
     }
