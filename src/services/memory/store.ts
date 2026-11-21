@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { createId } from '../../utils/id.js'
 import * as db from '../chat/db.js'
-import { MAX_MEMORY_CHARS, normalizeMemoryText } from './text.js'
+import { memoryCharLimit, normalizeMemoryText } from './text.js'
 import type { MemoryRecord, MemorySource } from './types.js'
 
 /** 记忆总量上限，超出后淘汰最早写入的条目 */
@@ -26,7 +26,7 @@ const setMemories = (memories: MemoryRecord[]) =>
   useMemoryStore.setState({ memories: sortMemories(memories) })
 
 /** 版本记忆的固定 id：升级时更新同一条，不会越积越多 */
-const VERSION_MEMORY_ID = 'deepmeow-version'
+export const VERSION_MEMORY_ID = 'deepmeow-version'
 
 /** 把当前版本写进长期记忆，让模型能回答「你是什么版本」 */
 const ensureVersionMemory = async (): Promise<void> => {
@@ -91,7 +91,7 @@ export const addMemory = async (
   text: string,
   source: MemorySource
 ): Promise<MemoryRecord | null> => {
-  const content = text.trim().replace(/\s+/g, ' ').slice(0, MAX_MEMORY_CHARS)
+  const content = text.trim().replace(/\s+/g, ' ').slice(0, memoryCharLimit(source))
   const normalized = normalizeMemoryText(content)
   if (content.length < 2) {
     return null
@@ -137,7 +137,7 @@ export const updateMemory = async (
   const text =
     patch.text === undefined
       ? memory.text
-      : patch.text.trim().replace(/\s+/g, ' ').slice(0, MAX_MEMORY_CHARS)
+      : patch.text.trim().replace(/\s+/g, ' ').slice(0, memoryCharLimit(memory.source))
   if (text.length < 2) {
     return false
   }
@@ -167,6 +167,18 @@ export const removeMemory = async (id: string): Promise<boolean> => {
     db.reportStorageError('delete memory')(error)
     return false
   }
+}
+
+/** 批量删除记忆；版本记忆固定保留，不参与删除 */
+export const removeMemories = async (ids: readonly string[]): Promise<number> => {
+  const targets = ids.filter((id) => id !== VERSION_MEMORY_ID)
+  let removed = 0
+  for (const id of targets) {
+    if (await removeMemory(id)) {
+      removed += 1
+    }
+  }
+  return removed
 }
 
 /** 请求时注入的记忆文本：只取启用项，最新在前 */

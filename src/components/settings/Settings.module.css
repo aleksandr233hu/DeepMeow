@@ -70,6 +70,28 @@
   overflow-y: auto;
 }
 
+/* 内容区顶部：猫名 + 原名小字 */
+.sectionHeading {
+  flex-shrink: 0;
+  margin-bottom: 8px;
+  padding: 2px 0 10px;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+}
+
+.sectionHeadingTitle {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+.sectionHeadingSub {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
 .cell {
   box-sizing: border-box;
   flex-shrink: 0;

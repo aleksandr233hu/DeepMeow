@@ -13,7 +13,7 @@ export const CatMascot = () => (
       fill="#8A9AAE"
     />
     <path d="M22 19 25 34 35 27Z" fill="#D9C7B6" />
-    <path d="M66 27 74 19 71 34Z" fill="#D9C7B6" />
+    <path d="M66 19 63 34 53 27Z" fill="#D9C7B6" />
     <ellipse cx="36" cy="48" rx="6.5" ry="7" fill="#E9AE45" />
     <ellipse cx="60" cy="48" rx="6.5" ry="7" fill="#E9AE45" />
     <ellipse cx="36" cy="48" rx="2" ry="5" fill="#2C2F34" />

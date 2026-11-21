@@ -1,8 +1,18 @@
 import clsx from 'clsx'
 import { memo, useState } from 'react'
 import { useTranslate } from '../../i18n/index.js'
-import { IconEditOutline16, IconEllipsisOutline16, IconTrashOutline16 } from '../base/icons.js'
-import { renameSession, selectSession, setSessionGroup, setSessionPinned } from '../../services/chat/store.js'
+import {
+  IconCheckOutline16,
+  IconEditOutline16,
+  IconEllipsisOutline16,
+  IconTrashOutline16,
+} from '../base/icons.js'
+import {
+  renameSession,
+  selectSession,
+  setSessionGroup,
+  setSessionPinned,
+} from '../../services/chat/store.js'
 import { useSessionGroups } from '../../services/chat/groups.js'
 import type { SessionSummary } from '../../services/chat/types.js'
 import { IconButton } from '../base/IconButton.js'
@@ -15,10 +25,17 @@ export const SessionItem = memo(function SessionItem({
   session,
   active,
   onDelete,
+  selecting = false,
+  selected = false,
+  onToggleSelect,
 }: {
   session: SessionSummary
   active: boolean
   onDelete: () => void
+  /** 多选模式：整行点击切换勾选，不打开会话，也不显示右侧菜单 */
+  selecting?: boolean
+  selected?: boolean
+  onToggleSelect?: () => void
 }) {
   const t = useTranslate()
   const [editing, setEditing] = useState(false)
@@ -56,56 +73,75 @@ export const SessionItem = memo(function SessionItem({
 
   return (
     <div
-      className={clsx(styles.item, active && styles.active)}
+      className={clsx(
+        styles.item,
+        selected && styles.selected,
+        active && !selecting && styles.active
+      )}
+      role={selecting ? 'checkbox' : undefined}
+      aria-checked={selecting ? selected : undefined}
       onClick={() => {
+        if (selecting) {
+          onToggleSelect?.()
+          return
+        }
         selectSession(session.id)
         closeMobileSider()
       }}
     >
+      {selecting ? (
+        <span className={clsx(styles.checkbox, selected && styles.checkboxChecked)}>
+          {selected ? <IconCheckOutline16 /> : null}
+        </span>
+      ) : null}
       <div className={styles.title}>{displayTitle}</div>
-      <div className={styles.action} onClick={(event) => event.stopPropagation()}>
-        <Menu
-          options={[
-            {
-              key: 'pin',
-              label: session.pinned ? t('sessionUnpin') : t('sessionPin'),
-              onSelect: () => setSessionPinned(session.id, !session.pinned),
-            },
-            {
-              key: 'rename',
-              label: t('sessionItemMenuRenameOption'),
-              icon: <IconEditOutline16 />,
-              onSelect: () => setEditing(true),
-            },
-            ...groups.map((group) => ({
-              key: `group-${group.id}`,
-              label:
-                session.groupId === group.id ? `✓ ${group.name}` : `${t('groupMoveTo')}：${group.name}`,
-              onSelect: () => moveToGroup(group.id),
-            })),
-            ...(session.groupId
-              ? [
-                  {
-                    key: 'ungroup',
-                    label: t('groupUngroup'),
-                    onSelect: () => moveToGroup(null),
-                  },
-                ]
-              : []),
-            {
-              key: 'delete',
-              label: t('delete'),
-              icon: <IconTrashOutline16 />,
-              danger: true,
-              onSelect: onDelete,
-            },
-          ]}
-        >
-          {({ toggle }) => (
-            <IconButton icon={<IconEllipsisOutline16 />} aria-label={t('more')} onClick={toggle} />
-          )}
-        </Menu>
-      </div>
+      {selecting ? null : (
+        <div className={styles.action} onClick={(event) => event.stopPropagation()}>
+          <Menu
+            options={[
+              {
+                key: 'pin',
+                label: session.pinned ? t('sessionUnpin') : t('sessionPin'),
+                onSelect: () => setSessionPinned(session.id, !session.pinned),
+              },
+              {
+                key: 'rename',
+                label: t('sessionItemMenuRenameOption'),
+                icon: <IconEditOutline16 />,
+                onSelect: () => setEditing(true),
+              },
+              ...groups.map((group) => ({
+                key: `group-${group.id}`,
+                label:
+                  session.groupId === group.id
+                    ? `✓ ${group.name}`
+                    : `${t('groupMoveTo')}：${group.name}`,
+                onSelect: () => moveToGroup(group.id),
+              })),
+              ...(session.groupId
+                ? [
+                    {
+                      key: 'ungroup',
+                      label: t('groupUngroup'),
+                      onSelect: () => moveToGroup(null),
+                    },
+                  ]
+                : []),
+              {
+                key: 'delete',
+                label: t('delete'),
+                icon: <IconTrashOutline16 />,
+                danger: true,
+                onSelect: onDelete,
+              },
+            ]}
+          >
+            {({ toggle }) => (
+              <IconButton icon={<IconEllipsisOutline16 />} aria-label={t('more')} onClick={toggle} />
+            )}
+          </Menu>
+        </div>
+      )}
     </div>
   )
 })

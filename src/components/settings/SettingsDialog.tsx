@@ -69,33 +69,49 @@ export const SettingsDialog = () => {
   return open ? <SettingsContent /> : null
 }
 
-const sections: { value: SettingsSection; label: TranslationKey; icon: ReactNode }[] = [
+const sections: {
+  value: SettingsSection
+  label: TranslationKey
+  /** 原名，作为小字显示在内容区顶部 */
+  legacy: TranslationKey
+  icon: ReactNode
+}[] = [
   {
     value: 'general',
     label: 'settingDialogAsideGeneralOptionLabel',
+    legacy: 'settingDialogAsideGeneralLegacy',
     icon: <IconSettingsOutline16 />,
   },
   {
     value: 'chat',
     label: 'settingDialogAsideChatOptionLabel',
+    legacy: 'settingDialogAsideChatLegacy',
     icon: <IconGlobeLanguageOutline14 />,
   },
   {
     value: 'personalization',
     label: 'settingDialogAsidePersonalizationOptionLabel',
+    legacy: 'settingDialogAsidePersonalizationLegacy',
     icon: <IconEditOutline16 />,
   },
   {
     value: 'memory',
     label: 'settingDialogAsideMemoryOptionLabel',
+    legacy: 'settingDialogAsideMemoryLegacy',
     icon: <IconPaw16 />,
   },
   {
     value: 'presets',
     label: 'settingDialogAsidePresetsOptionLabel',
+    legacy: 'settingDialogAsidePresetsLegacy',
     icon: <IconCatFace16 />,
   },
-  { value: 'data', label: 'settingDialogAsideDataOptionLabel', icon: <IconDataOutline16 /> },
+  {
+    value: 'data',
+    label: 'settingDialogAsideDataOptionLabel',
+    legacy: 'settingDialogAsideDataLegacy',
+    icon: <IconDataOutline16 />,
+  },
 ]
 
 const SettingsContent = () => {
@@ -103,6 +119,7 @@ const SettingsContent = () => {
   const isMobile = useIsMobile()
   // 打开时按调用方指定的分组选中，之后在弹窗内切换
   const [section, setSection] = useState(() => useSettingsDialog.getState().section)
+  const currentSection = sections.find((item) => item.value === section)
   // 切换分组不丢失正在输入的 API Key 与导入状态
   const apiKeyEditor = useApiKeyEditor()
   const historyImport = useHistoryImport()
@@ -138,6 +155,12 @@ const SettingsContent = () => {
           ))}
         </div>
         <div role="tabpanel" className={styles.content}>
+          {currentSection ? (
+            <div className={styles.sectionHeading}>
+              <div className={styles.sectionHeadingTitle}>{t(currentSection.label)}</div>
+              <div className={styles.sectionHeadingSub}>{t(currentSection.legacy)}</div>
+            </div>
+          ) : null}
           {section === 'general' ? (
             <>
               <ApiKeyField editor={apiKeyEditor} />

@@ -10,6 +10,7 @@ import { stopReadAloud } from '../../services/speech/readAloud.js'
 import type { UserMessage as UserMessageType } from '../../services/chat/types.js'
 import { Button } from '../base/Button.js'
 import { IconButton } from '../base/IconButton.js'
+import { Modal } from '../base/Modal.js'
 import { showToast } from '../base/toastState.js'
 import { ensureApiKey } from '../settings/settingsDialogState.js'
 import {
@@ -67,15 +68,28 @@ export const UserMessage = memo(function UserMessage({
     }
   }
 
-  const remove = () => {
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const hasVersions = versions.ids.length > 1
+  const remove = (includeVersions = false) => {
     if (busy) {
       return
     }
-    const undo = deleteMessage(sessionId, message.id)
+    const undo = deleteMessage(sessionId, message.id, { includeVersions })
     if (undo) {
       showToast({ key: 'messageDeleted', action: { key: 'undo', onClick: undo } })
     } else {
       showToast({ key: 'messageDeleteFailed', type: 'error' })
+    }
+  }
+  // 多个版本时先问删除范围
+  const requestDelete = () => {
+    if (busy) {
+      return
+    }
+    if (hasVersions) {
+      setDeleteOpen(true)
+    } else {
+      remove()
     }
   }
 
@@ -183,7 +197,7 @@ export const UserMessage = memo(function UserMessage({
                     label: t('deleteMessage'),
                     icon: <IconTrashOutline16 />,
                     danger: true,
-                    onSelect: remove,
+                    onSelect: requestDelete,
                   },
                 ]}
               />
@@ -192,6 +206,39 @@ export const UserMessage = memo(function UserMessage({
           </div>
         </>
       )}
+      {deleteOpen ? (
+        <Modal
+          title={t('deleteMessage')}
+          onClose={() => setDeleteOpen(false)}
+          footer={
+            <>
+              <Button variant="outlined" onClick={() => setDeleteOpen(false)}>
+                {t('cancel')}
+              </Button>
+              <Button
+                variant="dangerOutlined"
+                onClick={() => {
+                  setDeleteOpen(false)
+                  remove(true)
+                }}
+              >
+                {t('deleteMessageWithVersions')}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setDeleteOpen(false)
+                  remove()
+                }}
+              >
+                {t('deleteMessageOnlyCurrent')}
+              </Button>
+            </>
+          }
+        >
+          {t('deleteMessageVersionsDescription', { count: versions.ids.length })}
+        </Modal>
+      ) : null}
     </div>
   )
 })

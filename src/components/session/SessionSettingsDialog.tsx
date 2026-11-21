@@ -3,9 +3,11 @@ import { useTranslate } from '../../i18n/index.js'
 import {
   applyGenerationToAll,
   setSessionGeneration,
+  setSessionPreset,
   useChatStore,
 } from '../../services/chat/store.js'
 import type { IdentitySource } from '../../services/chat/identity.js'
+import { usePresetStore } from '../../services/presets/store.js'
 import { useSettings } from '../../services/settings.js'
 import type { StyleProfile } from '../../services/style/types.js'
 import { Button } from '../base/Button.js'
@@ -31,6 +33,8 @@ type Form = {
   useStyleProfile: boolean
   styleProfile: StyleProfile
   identitySource: 'global' | IdentitySource
+  /** 会话级人格预设；空表示跟随全局默认 */
+  presetId: string | null
 }
 
 /** 会话级生成参数弹窗：跟随全局或覆盖；可把当前参数批量应用到所有会话 */
@@ -50,7 +54,9 @@ const SessionSettingsContent = ({ sessionId }: { sessionId: string }) => {
     defaultSystemPrompt: useSettings((state) => state.agentInstructions),
     styleProfile: useSettings((state) => state.styleProfile),
     identitySource: useSettings((state) => state.identitySource),
+    defaultPresetId: useSettings((state) => state.defaultPresetId),
   }
+  const presets = usePresetStore((state) => state.presets)
   const [form, setForm] = useState<Form>(() => ({
     useTemperature: session?.generation?.temperature !== undefined,
     temperature: session?.generation?.temperature ?? defaults.temperature ?? TEMPERATURE_DEFAULT,
@@ -61,6 +67,7 @@ const SessionSettingsContent = ({ sessionId }: { sessionId: string }) => {
     useStyleProfile: session?.styleProfile !== undefined,
     styleProfile: session?.styleProfile ?? defaults.styleProfile,
     identitySource: session?.identitySource ?? 'global',
+    presetId: session?.presetId ?? null,
   }))
   const [confirmBatch, setConfirmBatch] = useState(false)
   const [batching, setBatching] = useState(false)
@@ -73,6 +80,10 @@ const SessionSettingsContent = ({ sessionId }: { sessionId: string }) => {
   const globalTopP = defaults.topP ?? TOP_P_DEFAULT
   const effectiveIdentitySource =
     form.identitySource === 'global' ? defaults.identitySource : form.identitySource
+  const globalPreset =
+    presets.find((preset) => preset.id === defaults.defaultPresetId) ??
+    presets.find((preset) => preset.id === 'builtin-general') ??
+    presets[0]
 
   const save = () => {
     const ok = setSessionGeneration(
@@ -86,6 +97,10 @@ const SessionSettingsContent = ({ sessionId }: { sessionId: string }) => {
       form.identitySource === 'global' ? null : form.identitySource
     )
     if (ok) {
+      // 人格预设独立存字段；与全局默认不同才写入
+      if ((session.presetId ?? null) !== form.presetId) {
+        setSessionPreset(sessionId, form.presetId)
+      }
       showToast({ key: 'sessionSettingsSaved' })
       closeSessionSettings()
     } else {
@@ -117,6 +132,7 @@ const SessionSettingsContent = ({ sessionId }: { sessionId: string }) => {
         title={t('sessionSettingsTitle')}
         closable
         className={styles.dialog}
+        mainClassName={styles.main}
         onClose={closeSessionSettings}
         footer={
           <div className={styles.footer}>
@@ -159,6 +175,33 @@ const SessionSettingsContent = ({ sessionId }: { sessionId: string }) => {
             />
           </div>
         </div>
+
+        {effectiveIdentitySource === 'persona' ? (
+          <div className={styles.block}>
+            <div className={styles.blockHead}>
+              <div>
+                <div className={styles.label}>{t('sessionPresetLabel')}</div>
+                <div className={styles.description}>{t('sessionPresetDescription')}</div>
+              </div>
+              <Select
+                ariaLabel={t('sessionPresetLabel')}
+                value={form.presetId ?? ''}
+                options={[
+                  {
+                    value: '',
+                    label: t('followGlobalWithValue', {
+                      value: globalPreset ? globalPreset.name : t('notSet'),
+                    }),
+                  },
+                  ...presets.map((preset) => ({ value: preset.id, label: preset.name })),
+                ]}
+                onChange={(presetId) =>
+                  setForm((current) => ({ ...current, presetId: presetId || null }))
+                }
+              />
+            </div>
+          </div>
+        ) : null}
 
         <div className={styles.block}>
           <div className={styles.blockHead}>

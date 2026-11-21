@@ -42,14 +42,13 @@
 }
 
 .greeting {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   margin-bottom: 21px;
   font-size: 24px;
   line-height: 32px;
   font-weight: 600;
   text-align: center;
+  white-space: pre-line;
   color: var(--dsw-alias-label-primary);
 }
 

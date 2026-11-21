@@ -26,6 +26,7 @@ import { SettingsDialog } from '../components/settings/SettingsDialog.js'
 import { Toast } from '../components/base/Toast.js'
 import { showToast } from '../components/base/toastState.js'
 import { ForkDialog } from '../components/messages/ForkDialog.js'
+import { ImagePreview } from '../components/messages/ImagePreview.js'
 import { onUploadNotice } from '../services/attachments.js'
 import { Button } from '../components/base/Button.js'
 import { stopReadAloud } from '../services/speech/readAloud.js'
@@ -156,6 +157,7 @@ export const App = () => {
       <SessionSettingsDialog />
       <ForkDialog />
       <UpdateDialog />
+      <ImagePreview />
       <Toast />
     </>
   )

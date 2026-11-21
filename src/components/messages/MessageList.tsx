@@ -61,6 +61,7 @@ export const MessageList = ({
   )
   const [showCompressed, setShowCompressed] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [showScrollBottom, setShowScrollBottom] = useState(false)
   useEffect(() => setShowCompressed(false), [session.id])
   const messages =
     showCompressed || coveredIds.size === 0
@@ -93,6 +94,15 @@ export const MessageList = ({
     if (el) {
       stickyRef.current = false
       el.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [])
+
+  /** 回到底部：恢复跟随状态并平滑滚到最新消息 */
+  const jumpToBottom = useCallback(() => {
+    const el = scrollRef.current
+    if (el) {
+      stickyRef.current = true
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
     }
   }, [])
 
@@ -163,6 +173,7 @@ export const MessageList = ({
       }
       scrollTopRef.current = el.scrollTop
       setShowScrollTop(el.scrollTop > 400)
+      setShowScrollBottom(el.scrollHeight - el.scrollTop - el.clientHeight > 200)
     }
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
@@ -220,6 +231,18 @@ export const MessageList = ({
             onClick={scrollToTop}
           >
             <span className={styles.scrollTopIcon}>
+              <IconChevronDownOutline14 />
+            </span>
+          </button>
+        ) : null}
+        {showScrollBottom ? (
+          <button
+            type="button"
+            className={styles.scrollBottom}
+            aria-label={t('scrollToBottom')}
+            onClick={jumpToBottom}
+          >
+            <span className={styles.scrollBottomIcon}>
               <IconChevronDownOutline14 />
             </span>
           </button>

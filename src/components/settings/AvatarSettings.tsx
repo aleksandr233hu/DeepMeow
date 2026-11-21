@@ -1,5 +1,6 @@
-import { useRef } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { useTranslate } from '../../i18n/index.js'
+import deepmeowAvatar from '../../assets/images/deepmeow-avatar.png'
 import {
   resetAvatar,
   saveAvatar,
@@ -29,13 +30,16 @@ export const AvatarSettings = () => {
       <div className={styles.description}>{t('customAvatarsDescription')}</div>
       <div className={styles.rows}>
         <AvatarRow role="user" fallback={nickname.trim().slice(0, 1) || t('you')} />
-        <AvatarRow role="assistant" fallback="DS" />
+        <AvatarRow
+          role="assistant"
+          fallback={<img className={styles.image} src={deepmeowAvatar} alt="" />}
+        />
       </div>
     </div>
   )
 }
 
-const AvatarRow = ({ role, fallback }: { role: AvatarRole; fallback: string }) => {
+const AvatarRow = ({ role, fallback }: { role: AvatarRole; fallback: ReactNode }) => {
   const t = useTranslate()
   const inputRef = useRef<HTMLInputElement>(null)
   const imageUrl = useAvatarObjectUrl(role)

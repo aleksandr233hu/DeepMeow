@@ -9,10 +9,10 @@
   scrollbar-color: var(--scroll-color) transparent;
 }
 
-.scrollTop {
+.scrollTop,
+.scrollBottom {
   position: absolute;
   right: 18px;
-  bottom: 150px;
   z-index: 9;
   display: flex;
   align-items: center;
@@ -32,13 +32,30 @@
   }
 }
 
+.scrollTop {
+  bottom: 192px;
+}
+
+.scrollBottom {
+  bottom: 150px;
+}
+
 .scrollTopIcon {
   display: flex;
   transform: rotate(180deg);
 }
 
+.scrollBottomIcon {
+  display: flex;
+}
+
 @media not all and (min-width: 768px) {
   .scrollTop {
+    right: 12px;
+    bottom: 176px;
+  }
+
+  .scrollBottom {
     right: 12px;
     bottom: 132px;
   }

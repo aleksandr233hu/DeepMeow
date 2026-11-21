@@ -1,6 +1,14 @@
 .dialog {
   width: 620px;
   max-height: calc(100vh - 32px);
+  overflow: hidden;
+}
+
+/* 内容多时只滚中间，底部保存按钮始终可见 */
+.main {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .hintTop {

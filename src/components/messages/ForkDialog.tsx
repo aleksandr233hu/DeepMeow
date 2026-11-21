@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 import { useMemo, useState } from 'react'
 import { useTranslate } from '../../i18n/index.js'
 import { getForkRounds } from '../../services/chat/fork.js'
@@ -5,6 +6,7 @@ import { getReplyText } from '../../services/chat/reply.js'
 import { forkSessionFromMessage, useChatStore } from '../../services/chat/store.js'
 import { Button } from '../base/Button.js'
 import { Modal } from '../base/Modal.js'
+import { IconChevronDownOutline14 } from '../base/icons.js'
 import { showToast } from '../base/toastState.js'
 import { closeForkDialog, useForkDialog } from './forkDialogState.js'
 import styles from './ForkDialog.module.css'
@@ -36,7 +38,9 @@ const ForkDialogContent = ({
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(rounds.map((round) => round.id))
   )
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set())
   const allSelected = rounds.length > 0 && selected.size === rounds.length
+  const allCollapsed = rounds.length > 0 && rounds.every((round) => collapsed.has(round.id))
   const targetRoundId = rounds.find((round) => round.assistant.id === messageId)?.id
   const targetAppended = !targetRoundId || !selected.has(targetRoundId)
 
@@ -54,6 +58,22 @@ const ForkDialogContent = ({
       }
       return next
     })
+  }
+
+  const toggleCollapse = (id: string) => {
+    setCollapsed((current) => {
+      const next = new Set(current)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const toggleCollapseAll = () => {
+    setCollapsed(allCollapsed ? new Set() : new Set(rounds.map((round) => round.id)))
   }
 
   const toggleAll = () => {
@@ -89,43 +109,71 @@ const ForkDialogContent = ({
       }
     >
       <div className={styles.description}>{t('forkDialogDescription')}</div>
-      <label className={styles.selectAll}>
-        <input
-          type="checkbox"
-          className={styles.checkbox}
-          checked={allSelected}
-          onChange={toggleAll}
-        />
-        <span>{t('forkSelectAll')}</span>
-      </label>
+      <div className={styles.listHeader}>
+        <label className={styles.selectAll}>
+          <input
+            type="checkbox"
+            className={styles.checkbox}
+            checked={allSelected}
+            onChange={toggleAll}
+          />
+          <span>{t('forkSelectAll')}</span>
+        </label>
+        <button type="button" className={styles.collapseAll} onClick={toggleCollapseAll}>
+          {allCollapsed ? t('forkExpandAll') : t('forkCollapseAll')}
+        </button>
+      </div>
       <div className={styles.list}>
         {rounds.length === 0 ? <div className={styles.empty}>{t('forkNoRounds')}</div> : null}
-        {rounds.map((round) => (
-          <label key={round.id} className={styles.round}>
-            <input
-              type="checkbox"
-              className={styles.checkbox}
-              checked={selected.has(round.id)}
-              onChange={() => toggleRound(round.id)}
-            />
-            <div className={styles.content}>
-              <div className={styles.user}>
-                {round.user.content || t('forkAttachmentOnly', { count: round.user.files.length })}
-                {round.user.content && round.user.files.length > 0 ? (
-                  <span className={styles.files}>
-                    {t('forkAttachmentCount', { count: round.user.files.length })}
-                  </span>
-                ) : null}
-                {round.assistant.id === messageId ? (
-                  <span className={styles.target}>{t('forkTargetBadge')}</span>
-                ) : null}
+        {rounds.map((round) => {
+          const isCollapsed = collapsed.has(round.id)
+          return (
+            <label
+              key={round.id}
+              className={clsx(styles.round, isCollapsed && styles.roundCollapsed)}
+            >
+              <input
+                type="checkbox"
+                className={styles.checkbox}
+                checked={selected.has(round.id)}
+                onChange={() => toggleRound(round.id)}
+              />
+              <div className={styles.content}>
+                <div className={styles.user}>
+                  {round.user.content ||
+                    t('forkAttachmentOnly', { count: round.user.files.length })}
+                  {round.user.content && round.user.files.length > 0 ? (
+                    <span className={styles.files}>
+                      {t('forkAttachmentCount', { count: round.user.files.length })}
+                    </span>
+                  ) : null}
+                  {round.assistant.id === messageId ? (
+                    <span className={styles.target}>{t('forkTargetBadge')}</span>
+                  ) : null}
+                  <button
+                    type="button"
+                    className={styles.collapseButton}
+                    aria-label={t(isCollapsed ? 'forkExpand' : 'forkCollapse')}
+                    aria-expanded={!isCollapsed}
+                    onClick={(event) => {
+                      // 只折叠这一组，不改变勾选
+                      event.preventDefault()
+                      event.stopPropagation()
+                      toggleCollapse(round.id)
+                    }}
+                  >
+                    <IconChevronDownOutline14 />
+                  </button>
+                </div>
+                {isCollapsed ? null : (
+                  <div className={styles.assistant}>
+                    {getReplyText(round.assistant) || t('forkEmptyReply')}
+                  </div>
+                )}
               </div>
-              <div className={styles.assistant}>
-                {getReplyText(round.assistant) || t('forkEmptyReply')}
-              </div>
-            </div>
-          </label>
-        ))}
+            </label>
+          )
+        })}
       </div>
     </Modal>
   )

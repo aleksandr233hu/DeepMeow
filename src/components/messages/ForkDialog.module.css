@@ -10,16 +10,39 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
+.listHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--dsw-alias-border-l2);
+}
+
 .selectAll {
   display: flex;
+  flex: 1;
   align-items: center;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--dsw-alias-border-l2);
   font-size: 14px;
   font-weight: 500;
   color: var(--dsw-alias-label-primary);
   cursor: pointer;
+}
+
+.collapseAll {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--dsw-alias-brand-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--dsw-alias-interactive-bg-hover);
+  }
 }
 
 .checkbox {
@@ -56,12 +79,48 @@
 }
 
 .user {
+  position: relative;
+  padding-right: 26px;
   font-size: 14px;
   line-height: 22px;
   font-weight: 500;
   color: var(--dsw-alias-label-primary);
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* 折叠后只留提问，正文截到两行 */
+.roundCollapsed .user {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.collapseButton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--dsw-alias-interactive-bg-hover);
+  }
+
+  .roundCollapsed & {
+    transform: rotate(-90deg);
+  }
 }
 
 .files {

@@ -1,6 +1,6 @@
 import { useTranslate } from '../../i18n/index.js'
 import clsx from 'clsx'
-import { memo, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { useIsMobile } from '../../app/viewport.js'
 import {
   IconEditOutline16,
@@ -23,6 +23,7 @@ import type { AssistantMessage as AssistantMessageType } from '../../services/ch
 import { openSettings } from '../settings/settingsDialogState.js'
 import { IconButton } from '../base/IconButton.js'
 import { Button } from '../base/Button.js'
+import { Modal } from '../base/Modal.js'
 import { showToast } from '../base/toastState.js'
 import { Markdown } from '../markdown/Markdown.js'
 import { SiteThumbnails } from '../search/SiteLogo.js'
@@ -80,6 +81,16 @@ export const AssistantMessage = memo(function AssistantMessage({
   const summaryEntry = `${message.id}-summary`
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
+  const editorRef = useRef<HTMLTextAreaElement>(null)
+  // 编辑框随内容长高，最多占视口 60%，长回复不再挤在小框里
+  useEffect(() => {
+    const node = editorRef.current
+    if (!node) {
+      return
+    }
+    node.style.height = 'auto'
+    node.style.height = `${Math.min(node.scrollHeight, window.innerHeight * 0.6)}px`
+  }, [draft, editing])
   const canEdit =
     !refused && (message.status === 'done' || message.status === 'stopped') && responseText !== ''
   const startEdit = () => {
@@ -97,15 +108,28 @@ export const AssistantMessage = memo(function AssistantMessage({
       showToast({ key: 'editReplyFailed', type: 'error' })
     }
   }
-  const remove = () => {
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const hasVersions = versions.ids.length > 1
+  const remove = (includeVersions = false) => {
     if (busy) {
       return
     }
-    const undo = deleteMessage(sessionId, message.id)
+    const undo = deleteMessage(sessionId, message.id, { includeVersions })
     if (undo) {
       showToast({ key: 'messageDeleted', action: { key: 'undo', onClick: undo } })
     } else {
       showToast({ key: 'messageDeleteFailed', type: 'error' })
+    }
+  }
+  // 有多个版本时先问删哪个范围，单版本直接删
+  const requestDelete = () => {
+    if (busy) {
+      return
+    }
+    if (hasVersions) {
+      setDeleteOpen(true)
+    } else {
+      remove()
     }
   }
   const fork = () => {
@@ -130,6 +154,7 @@ export const AssistantMessage = memo(function AssistantMessage({
   const editorView = editing ? (
     <div className={styles.editor}>
       <textarea
+        ref={editorRef}
         className={styles.textarea}
         aria-label={t('editReply')}
         autoFocus
@@ -288,7 +313,7 @@ export const AssistantMessage = memo(function AssistantMessage({
                   label: t('deleteMessage'),
                   icon: <IconTrashOutline16 />,
                   danger: true,
-                  onSelect: remove,
+                  onSelect: requestDelete,
                 },
               ]}
             />
@@ -309,6 +334,39 @@ export const AssistantMessage = memo(function AssistantMessage({
           ) : null}
         </div>
       )}
+      {deleteOpen ? (
+        <Modal
+          title={t('deleteMessage')}
+          onClose={() => setDeleteOpen(false)}
+          footer={
+            <>
+              <Button variant="outlined" onClick={() => setDeleteOpen(false)}>
+                {t('cancel')}
+              </Button>
+              <Button
+                variant="dangerOutlined"
+                onClick={() => {
+                  setDeleteOpen(false)
+                  remove(true)
+                }}
+              >
+                {t('deleteMessageWithVersions')}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setDeleteOpen(false)
+                  remove()
+                }}
+              >
+                {t('deleteMessageOnlyCurrent')}
+              </Button>
+            </>
+          }
+        >
+          {t('deleteMessageVersionsDescription', { count: versions.ids.length })}
+        </Modal>
+      ) : null}
     </div>
   )
 })

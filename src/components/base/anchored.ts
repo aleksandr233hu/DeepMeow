@@ -129,6 +129,11 @@ export const useAnchoredPosition = <T extends HTMLElement, F extends HTMLElement
       return
     }
     const rect = anchor.getBoundingClientRect()
+    // 锚点被隐藏（如窄屏上悬停才显示的操作按钮）时矩形为空；
+    // 此时保持上一次的位置，避免浮层跳到视口左上角。
+    if (rect.width === 0 && rect.height === 0) {
+      return
+    }
     const spaceAbove = rect.top - offset - VIEWPORT_PADDING
     const spaceBelow = window.innerHeight - rect.bottom - offset - VIEWPORT_PADDING
 

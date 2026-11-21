@@ -7,6 +7,27 @@ export const IconCheckOutline16 = () => (
   </svg>
 )
 
+export const IconSelectOutline16 = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect
+      x="1.75"
+      y="1.75"
+      width="12.5"
+      height="12.5"
+      rx="3.25"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
+    <path
+      d="M4.9 8.15L6.85 10.1L11.1 5.6"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
 export const IconChevronDownOutline14 = () => (
   <svg width={14} height={14} viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path

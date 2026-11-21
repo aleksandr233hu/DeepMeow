@@ -1,5 +1,5 @@
 /** 长期记忆条目：完全存本地，请求时按开关注入系统提示词 */
-export type MemorySource = 'auto' | 'manual'
+export type MemorySource = 'auto' | 'manual' | 'summary'
 
 export type MemoryRecord = {
   id: string

@@ -16,6 +16,7 @@ import {
   getVisibleMessages,
   normalizeSession,
   removeMessage,
+  removeMessageWithVersions,
   selectVersion,
 } from './branches.js'
 import * as db from './db.js'
@@ -565,6 +566,54 @@ export const setSessionGroup = (id: string, groupId: string | null) => {
   void db.setSessionGroup(id, groupId).catch(db.reportStorageError('move session to group'))
 }
 
+/** 批量置顶：摘要层一次更新，逐条走单条写入路径持久化。 */
+export const setSessionsPinned = (ids: readonly string[], pinned: boolean) => {
+  if (get().importingHistory) {
+    return
+  }
+  const targets = ids.filter((id) => !deletingSessions.has(id))
+  if (targets.length === 0) {
+    return
+  }
+  const target = new Set(targets)
+  set((state) => ({
+    sessions: state.sessions.map((session) =>
+      target.has(session.id) ? { ...session, pinned } : session
+    ),
+  }))
+  for (const id of targets) {
+    if (getSession(id)) {
+      updateSession(id, (session) => ({ ...session, pinned }))
+      persist(id)
+    }
+    void db.setSessionPinned(id, pinned).catch(db.reportStorageError('pin session'))
+  }
+}
+
+/** 批量移动到分组；groupId 为 null 表示移出分组。 */
+export const setSessionsGroup = (ids: readonly string[], groupId: string | null) => {
+  if (get().importingHistory) {
+    return
+  }
+  const targets = ids.filter((id) => !deletingSessions.has(id))
+  if (targets.length === 0) {
+    return
+  }
+  const target = new Set(targets)
+  set((state) => ({
+    sessions: state.sessions.map((session) =>
+      target.has(session.id) ? { ...session, groupId: groupId ?? undefined } : session
+    ),
+  }))
+  for (const id of targets) {
+    if (getSession(id)) {
+      updateSession(id, (session) => ({ ...session, groupId: groupId ?? undefined }))
+      persist(id)
+    }
+    void db.setSessionGroup(id, groupId).catch(db.reportStorageError('move session to group'))
+  }
+}
+
 /**
  * 删除会话；本地原件仅在没有其他会话引用时清理。远端文件不删：导入、编辑、重新生成都会复用同一个附件，
  * 同一服务端文件可能被多个会话引用，不维护引用计数。
@@ -789,6 +838,24 @@ export const setSessionPreset = (sessionId: string, presetId: string | null) => 
   persist(sessionId)
 }
 
+/** 记录自动提取长期记忆的游标；undefined 表示清空重来 */
+export const setSessionMemoryCursor = (sessionId: string, cursor: Session['memoryCursor']) => {
+  if (get().importingHistory || deletingSessions.has(sessionId)) {
+    return
+  }
+  if (!getSession(sessionId)) {
+    return
+  }
+  updateSession(sessionId, (session) => ({ ...session, memoryCursor: cursor }))
+  persist(sessionId)
+}
+
+/** 读取任意会话正文（不切换当前会话），供总结记忆等后台任务使用 */
+export const loadSessionForTask = async (id: string): Promise<Session | null> => {
+  await ensureSessionLoaded(id)
+  return getSession(id) ?? null
+}
+
 /**
  * 从某条助手回复分叉出新会话：复制它及其之前的可见路径，原会话保持不变。
  * 返回新会话 id；消息不可见、不是助手回复或正在生成时返回 null。
@@ -945,7 +1012,11 @@ export const applyGenerationToAll = async (
  * 删除当前路径上的一条消息：子分支接回父节点，其余版本与后续对话保留。
  * 返回撤销函数；会话不存在、正在生成或消息不可见时返回 null。
  */
-export const deleteMessage = (sessionId: string, messageId: string): (() => void) | null => {
+export const deleteMessage = (
+  sessionId: string,
+  messageId: string,
+  options?: { includeVersions?: boolean }
+): (() => void) | null => {
   if (get().importingHistory || deletingSessions.has(sessionId) || getStreamController(sessionId)) {
     return null
   }
@@ -955,7 +1026,9 @@ export const deleteMessage = (sessionId: string, messageId: string): (() => void
   }
   const snapshot = session
   updateSession(sessionId, (current) => {
-    const next = removeMessage(current, messageId)
+    const next = options?.includeVersions
+      ? removeMessageWithVersions(current, messageId)
+      : removeMessage(current, messageId)
     return next === current ? current : { ...next, updatedAt: Date.now() }
   })
   const updated = getSession(sessionId)
@@ -1513,12 +1586,18 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
       ),
     }))
     persist(sessionId)
-    // 回复完成后按开关自动提取长期记忆：每两轮一次，后台执行，失败静默
+    // 回复完成后按开关自动提取长期记忆：每新增 X 轮一次，后台执行，失败静默
     if (reply.status === 'done' && !controller.signal.aborted) {
       const latest = useSettings.getState()
       const session = getSession(sessionId)
       if (latest.memoryEnabled && latest.autoMemoryEnabled && session) {
-        void extractMemories({ session, apiKey: latest.apiKey ?? '' })
+        void extractMemories({
+          session,
+          apiKey: latest.apiKey ?? '',
+          every: latest.autoMemoryRounds,
+          onExtracted: (userMessageId) =>
+            setSessionMemoryCursor(sessionId, userMessageId ? { userMessageId } : undefined),
+        })
       }
     }
   }

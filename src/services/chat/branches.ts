@@ -155,3 +155,24 @@ export const removeMessage = (original: Session, messageId: string): Session => 
     messages,
   }
 }
+
+/**
+ * 删除一条消息连同它的所有版本（同父的全部兄弟），其余分支按单条删除的规则接回父节点。
+ * 返回是否真的删掉了内容。
+ */
+export const removeMessageWithVersions = (original: Session, messageId: string): Session => {
+  const session = normalizeSession(original)
+  const target = session.messages.find((message) => message.id === messageId)
+  if (!target) {
+    return original
+  }
+  const parentId = target.parentId ?? null
+  const ids = session.messages
+    .filter((message) => (message.parentId ?? null) === parentId)
+    .map((message) => message.id)
+  let next = session
+  for (const id of ids) {
+    next = removeMessage(next, id)
+  }
+  return next
+}

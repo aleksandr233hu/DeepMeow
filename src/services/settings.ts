@@ -52,6 +52,8 @@ type Settings = {
   /** 长期记忆开关 */
   memoryEnabled: boolean
   autoMemoryEnabled: boolean
+  /** 每新增多少轮对话自动提取一次长期记忆（1-10） */
+  autoMemoryRounds: number
   /** 新会话默认人格 */
   defaultPresetId: string | null
   /** 外观 */
@@ -82,6 +84,7 @@ const KEYS = {
   styleProfile: 'chat-demo:style-profile',
   memoryEnabled: 'chat-demo:memory-enabled',
   autoMemoryEnabled: 'chat-demo:auto-memory-enabled',
+  autoMemoryRounds: 'chat-demo:auto-memory-rounds',
   defaultPresetId: 'chat-demo:default-preset-id',
   accentColor: 'chat-demo:accent-color',
   fontPreference: 'chat-demo:font-preference',
@@ -211,6 +214,15 @@ const initialTemperature = (): number | null => {
   return Number.isFinite(value) && value >= 0 && value <= 2 ? value : null
 }
 
+/** 自动提取记忆的轮数间隔：整数 1-10，默认 2 */
+export const clampAutoMemoryRounds = (value: number) =>
+  Math.min(10, Math.max(1, Math.round(value)))
+
+const initialAutoMemoryRounds = (): number => {
+  const saved = Number(read(KEYS.autoMemoryRounds))
+  return Number.isFinite(saved) && saved >= 1 ? clampAutoMemoryRounds(saved) : 2
+}
+
 const initialTopP = (): number | null => {
   const value = Number(read(KEYS.topP))
   return Number.isFinite(value) && value > 0 && value <= 1 ? value : null
@@ -244,6 +256,7 @@ export const useSettings = create<Settings>(() => ({
   styleProfile: initialStyleProfile(),
   memoryEnabled: readBoolean(KEYS.memoryEnabled, true),
   autoMemoryEnabled: readBoolean(KEYS.autoMemoryEnabled, true),
+  autoMemoryRounds: initialAutoMemoryRounds(),
   defaultPresetId: read(KEYS.defaultPresetId),
   accentColor: initialAccentColor(),
   fontPreference: initialFontPreference(),
@@ -333,6 +346,12 @@ export const setMemoryEnabled = (memoryEnabled: boolean) => {
 export const setAutoMemoryEnabled = (autoMemoryEnabled: boolean) => {
   write(KEYS.autoMemoryEnabled, String(autoMemoryEnabled))
   useSettings.setState({ autoMemoryEnabled })
+}
+
+export const setAutoMemoryRounds = (autoMemoryRounds: number) => {
+  const value = clampAutoMemoryRounds(autoMemoryRounds)
+  write(KEYS.autoMemoryRounds, String(value))
+  useSettings.setState({ autoMemoryRounds: value })
 }
 
 export const setDefaultPresetId = (defaultPresetId: string | null) => {

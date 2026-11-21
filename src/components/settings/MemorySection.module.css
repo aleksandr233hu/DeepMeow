@@ -4,6 +4,124 @@
   color: var(--dsw-alias-label-primary);
 }
 
+/* 记忆列表标题行：标题 + 从会话总结 / 多选 */
+.listHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0 8px;
+
+  .sectionTitle {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+  }
+}
+
+.listActions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.linkButton {
+  padding: 3px 6px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--dsw-alias-brand-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: var(--dsw-alias-interactive-bg-hover);
+  }
+}
+
+.batchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.batchCount {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--dsw-alias-label-secondary);
+  white-space: nowrap;
+}
+
+/* 多选勾选框：与侧栏会话一致的空心方框 + 选中填充 */
+.checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--dsw-alias-border-l2);
+  border-radius: 5px;
+  background-color: var(--dsw-alias-bg-base);
+  color: transparent;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.checkboxOn {
+  border-color: var(--dsw-alias-brand-primary);
+  background-color: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-brand-primary-invert);
+}
+
+.summaryBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.summaryDescription {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.summaryField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summaryLabel {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.summaryProgress {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--dsw-alias-brand-primary);
+}
+
+.summaryHint {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
 .addBox {
   display: flex;
   flex-direction: column;

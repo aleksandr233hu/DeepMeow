@@ -95,26 +95,27 @@ export const SessionToolbar = ({
       ) : null}
       {identitySource === 'agent' ? (
         <span className={styles.badge}>{t('identityAgentBadge')}</span>
-      ) : null}
-      <Menu
-        options={presets.map((preset) => ({
-          key: preset.id,
-          label: preset.name,
-          icon: preset.id === currentPreset?.id ? <IconCheckOutline16 /> : undefined,
-          onSelect: () => setSessionPreset(session.id, preset.id),
-        }))}
-      >
-        {({ toggle }) => (
-          <button
-            type="button"
-            className={styles.preset}
-            title={t(identitySource === 'agent' ? 'personaIgnoredByAgentHint' : 'choosePreset')}
-            onClick={toggle}
-          >
-            {currentPreset ? currentPreset.name : t('choosePreset')}
-          </button>
-        )}
-      </Menu>
+      ) : (
+        <Menu
+          options={presets.map((preset) => ({
+            key: preset.id,
+            label: preset.name,
+            icon: preset.id === currentPreset?.id ? <IconCheckOutline16 /> : undefined,
+            onSelect: () => setSessionPreset(session.id, preset.id),
+          }))}
+        >
+          {({ toggle }) => (
+            <button
+              type="button"
+              className={styles.preset}
+              title={t('choosePreset')}
+              onClick={toggle}
+            >
+              {currentPreset ? currentPreset.name : t('choosePreset')}
+            </button>
+          )}
+        </Menu>
+      )}
       <Menu
         options={[
           {

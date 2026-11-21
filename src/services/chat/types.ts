@@ -144,6 +144,8 @@ export type Session = {
   styleProfile?: StyleProfile
   /** 本会话的身份来源；缺省跟随全局 */
   identitySource?: IdentitySource
+  /** 自动提取长期记忆的游标：最后已覆盖轮次的提问消息 id */
+  memoryCursor?: { userMessageId: string }
   /** 侧栏置顶：只影响列表排序与分组 */
   pinned?: boolean
   /** 所属的自定义分组；缺省表示未分组 */

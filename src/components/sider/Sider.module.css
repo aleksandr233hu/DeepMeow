@@ -212,6 +212,108 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
+/* 进入多选后，顶部入口高亮为「退出多选」 */
+.newGroupActive {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-brand-primary);
+
+  &:hover {
+    background: var(--dsw-alias-interactive-bg-hover);
+  }
+}
+
+/* 多选模式的底部操作栏，替代设置入口 */
+.selectBar {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 8px;
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+}
+
+.selectRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.selectCount {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.selectLink {
+  flex-shrink: 0;
+  padding: 3px 6px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--dsw-alias-brand-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: var(--dsw-alias-interactive-bg-hover);
+  }
+}
+
+.selectActions {
+  display: flex;
+  gap: 6px;
+
+  > * {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* 批量分组的组列表 */
+.groupPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.groupPickerItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 10px;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: var(--dsw-alias-interactive-bg-hover);
+  }
+}
+
+.groupPickerCreate {
+  border-style: dashed;
+  color: var(--dsw-alias-brand-primary);
+}
+
 /* 自定义分组的标题行：左侧折叠按钮 + 右侧操作菜单 */
 .groupHeader {
   position: sticky;

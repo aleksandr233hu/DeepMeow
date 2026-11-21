@@ -6,6 +6,7 @@ import {
   IconNewChatOutline16,
   IconPanelLeftOutline16,
   IconPaw16,
+  IconSelectOutline16,
   IconSettingsOutline16,
 } from '../base/icons.js'
 import { setSiderCollapsed } from '../../services/settings.js'
@@ -16,7 +17,13 @@ import {
   renameSessionGroup,
   useSessionGroups,
 } from '../../services/chat/groups.js'
-import { newChat, removeSession, useChatStore } from '../../services/chat/store.js'
+import {
+  newChat,
+  removeSession,
+  setSessionsGroup,
+  setSessionsPinned,
+  useChatStore,
+} from '../../services/chat/store.js'
 import type { SessionGroup, SessionSummary } from '../../services/chat/types.js'
 import { Button } from '../base/Button.js'
 import { IconButton } from '../base/IconButton.js'
@@ -36,24 +43,78 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
   const [now, setNow] = useState(Date.now)
   const sessionGroups = useSessionGroups((state) => state.groups)
   const groupIds = useMemo(() => new Set(sessionGroups.map((group) => group.id)), [sessionGroups])
-  // 分组归类优先：归入分组的会话只在分组里出现，置顶组与时间分组都不再重复
-  const isGrouped = (session: SessionSummary) =>
-    Boolean(session.groupId && groupIds.has(session.groupId))
-  const pinnedSessions = useMemo(
-    () => sessions.filter((session) => session.pinned && !isGrouped(session)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sessions, groupIds]
+  const [pinnedOpen, setPinnedOpen] = useState(true)
+  const [collapsedGroups, setCollapsedGroups] = useState<ReadonlySet<string>>(() => new Set())
+  const [selecting, setSelecting] = useState(false)
+  const [selected, setSelected] = useState<ReadonlySet<string>>(() => new Set())
+  const [batchPending, setBatchPending] = useState(false)
+  const [groupPickerOpen, setGroupPickerOpen] = useState(false)
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false)
+
+  const sessionById = useMemo(
+    () => new Map(sessions.map((session) => [session.id, session])),
+    [sessions]
   )
+  // 置顶与分组互不影响：置顶组收录所有置顶会话，归入分组的置顶会话在分组里照常显示
+  const pinnedSessions = useMemo(
+    () => sessions.filter((session) => session.pinned),
+    [sessions]
+  )
+  // 时间分组只收未置顶、也不在自定义分组里的会话，避免与上面两处重复
   const restSessions = useMemo(
-    () => sessions.filter((session) => !session.pinned && !isGrouped(session)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    () =>
+      sessions.filter(
+        (session) => !session.pinned && !(session.groupId && groupIds.has(session.groupId))
+      ),
     [sessions, groupIds]
   )
   const groups = useMemo(() => groupSessions(restSessions, now, t), [restSessions, now, t])
-  const [pinnedOpen, setPinnedOpen] = useState(true)
-  const [collapsedGroups, setCollapsedGroups] = useState<ReadonlySet<string>>(() => new Set())
-  const [groupDialog, setGroupDialog] = useState<{ id: string | null; name: string } | null>(null)
-  const [groupPending, setGroupPending] = useState(false)
+
+  // 当前实际显示在侧栏里的会话（折叠的分组不计入），作为「全选」的范围
+  const visibleIds = useMemo(() => {
+    const ids: string[] = []
+    if (pinnedOpen) {
+      ids.push(...pinnedSessions.map((session) => session.id))
+    }
+    for (const group of sessionGroups) {
+      if (collapsedGroups.has(group.id)) {
+        continue
+      }
+      for (const session of sessions) {
+        if (session.groupId === group.id) {
+          ids.push(session.id)
+        }
+      }
+    }
+    ids.push(...restSessions.map((session) => session.id))
+    return [...new Set(ids)]
+  }, [pinnedOpen, pinnedSessions, sessionGroups, collapsedGroups, sessions, restSessions])
+
+  const selectedCount = selected.size
+  const allSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id))
+  const selectedSessions = useMemo(
+    () =>
+      [...selected]
+        .map((id) => sessionById.get(id))
+        .filter((session): session is SessionSummary => Boolean(session)),
+    [selected, sessionById]
+  )
+  const allSelectedPinned = selectedSessions.length > 0 && selectedSessions.every((s) => s.pinned)
+  const hasGroupedSelected = selectedSessions.some((session) => session.groupId)
+
+  // 会话被别处删掉后，把失效的勾选清理掉
+  useEffect(() => {
+    if (!selecting) {
+      return
+    }
+    setSelected((current) => {
+      if (current.size === 0) {
+        return current
+      }
+      const next = new Set([...current].filter((id) => sessionById.has(id)))
+      return next.size === current.size ? current : next
+    })
+  }, [selecting, sessionById])
 
   const toggleGroup = (id: string) => {
     setCollapsedGroups((current) => {
@@ -67,24 +128,111 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
     })
   }
 
-  const saveGroup = async () => {
-    if (!groupDialog || groupPending) {
+  const startSelecting = () => {
+    setSelected(new Set())
+    setSelecting(true)
+  }
+
+  const exitSelecting = () => {
+    setSelecting(false)
+    setSelected(new Set())
+    setGroupPickerOpen(false)
+    setBatchDeleteOpen(false)
+  }
+
+  const toggleSelected = (id: string) => {
+    setSelected((current) => {
+      const next = new Set(current)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    setSelected((current) => {
+      const isAll = visibleIds.length > 0 && visibleIds.every((id) => current.has(id))
+      return isAll ? new Set() : new Set([...current, ...visibleIds])
+    })
+  }
+
+  const toggleBatchPin = () => {
+    if (selectedCount === 0 || batchPending) {
       return
     }
-    const name = groupDialog.name.trim()
+    setSessionsPinned([...selected], !allSelectedPinned)
+  }
+
+  const applyBatchGroup = (groupId: string | null) => {
+    if (selectedCount === 0 || batchPending) {
+      return
+    }
+    setSessionsGroup([...selected], groupId)
+    setGroupPickerOpen(false)
+    showToast({ key: groupId ? 'groupMoved' : 'groupRemoved' })
+  }
+
+  const deleteSelected = async () => {
+    if (selectedCount === 0 || batchPending) {
+      return
+    }
+    const ids = [...selected]
+    setBatchPending(true)
+    let failed = 0
+    for (const id of ids) {
+      if (!(await removeSession(id))) {
+        failed += 1
+      }
+    }
+    setBatchPending(false)
+    exitSelecting()
+    if (failed > 0) {
+      showToast({ key: 'batchDeleteFailed', params: { count: failed }, type: 'error' })
+    } else {
+      showToast({ key: 'sessionsDeleted', params: { count: ids.length } })
+    }
+  }
+
+  const [groupDialog, setGroupDialog] = useState<{
+    id: string | null
+    name: string
+    /** 从批量分组弹窗新建：创建后把选中的会话都移进去 */
+    applyToSelection?: boolean
+  } | null>(null)
+  const [groupPending, setGroupPending] = useState(false)
+
+  const saveGroup = async () => {
+    const dialog = groupDialog
+    if (!dialog || groupPending) {
+      return
+    }
+    const name = dialog.name.trim()
     if (!name) {
       return
     }
     setGroupPending(true)
-    const ok = groupDialog.id
-      ? await renameSessionGroup(groupDialog.id, name)
-      : (await createSessionGroup(name)) !== null
-    setGroupPending(false)
-    if (ok) {
-      setGroupDialog(null)
+    let ok = false
+    let createdId: string | null = null
+    if (dialog.id) {
+      ok = await renameSessionGroup(dialog.id, name)
     } else {
-      showToast({ key: 'groupSaveFailed', type: 'error' })
+      const created = await createSessionGroup(name)
+      ok = created !== null
+      createdId = created?.id ?? null
     }
+    setGroupPending(false)
+    if (!ok) {
+      showToast({ key: 'groupSaveFailed', type: 'error' })
+      return
+    }
+    if (createdId && dialog.applyToSelection && selected.size > 0) {
+      setSessionsGroup([...selected], createdId)
+      showToast({ key: 'groupMoved' })
+    }
+    setGroupDialog(null)
   }
 
   const deleteGroup = async (group: SessionGroup) => {
@@ -120,6 +268,18 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
       window.removeEventListener('focus', refresh)
     }
   }, [])
+
+  const renderSession = (session: SessionSummary) => (
+    <SessionItem
+      key={session.id}
+      session={session}
+      active={session.id === activeId}
+      onDelete={() => setDeleting(session)}
+      selecting={selecting}
+      selected={selected.has(session.id)}
+      onToggleSelect={() => toggleSelected(session.id)}
+    />
+  )
 
   return (
     <div className={clsx(styles.sider, mobile && styles.mobile)}>
@@ -161,6 +321,16 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
         </span>
         {t('groupNew')}
       </button>
+      <button
+        type="button"
+        className={clsx(styles.newGroup, selecting && styles.newGroupActive)}
+        onClick={selecting ? exitSelecting : startSelecting}
+      >
+        <span className={styles.newGroupIcon}>
+          <IconSelectOutline16 />
+        </span>
+        {selecting ? t('exitSelectMode') : t('selectMode')}
+      </button>
       <div className={styles.listWrap}>
         <div className={styles.list}>
           {pinnedSessions.length > 0 ? (
@@ -174,16 +344,7 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
                 <span>{t('sessionPinnedGroup')}</span>
                 <span className={styles.sectionChevron}>{pinnedOpen ? '▾' : '▸'}</span>
               </button>
-              {pinnedOpen
-                ? pinnedSessions.map((session) => (
-                    <SessionItem
-                      key={session.id}
-                      session={session}
-                      active={session.id === activeId}
-                      onDelete={() => setDeleting(session)}
-                    />
-                  ))
-                : null}
+              {pinnedOpen ? pinnedSessions.map(renderSession) : null}
             </div>
           ) : null}
           {sessionGroups.map((group) => {
@@ -225,16 +386,7 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
                     )}
                   </Menu>
                 </div>
-                {open
-                  ? items.map((session) => (
-                      <SessionItem
-                        key={session.id}
-                        session={session}
-                        active={session.id === activeId}
-                        onDelete={() => setDeleting(session)}
-                      />
-                    ))
-                  : null}
+                {open ? items.map(renderSession) : null}
                 {open && items.length === 0 ? (
                   <div className={styles.groupEmpty}>{t('groupEmpty')}</div>
                 ) : null}
@@ -244,26 +396,61 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
           {groups.map((group) => (
             <div key={group.key} className={styles.section}>
               <div className={styles.sectionHeader}>{group.label}</div>
-              {group.sessions.map((session) => (
-                <SessionItem
-                  key={session.id}
-                  session={session}
-                  active={session.id === activeId}
-                  onDelete={() => setDeleting(session)}
-                />
-              ))}
+              {group.sessions.map(renderSession)}
             </div>
           ))}
         </div>
       </div>
-      <div className={styles.bottom}>
-        <button type="button" className={styles.settings} onClick={() => openSettings('general')}>
-          <span className={styles.settingsIcon}>
-            <IconSettingsOutline16 />
-          </span>
-          <span className={styles.settingsLabel}>{t('settings')}</span>
-        </button>
-      </div>
+      {selecting ? (
+        <div className={styles.selectBar}>
+          <div className={styles.selectRow}>
+            <span className={styles.selectCount}>
+              {t('selectedCount', { count: selectedCount })}
+            </span>
+            <button type="button" className={styles.selectLink} onClick={toggleSelectAll}>
+              {allSelected ? t('selectNone') : t('selectAll')}
+            </button>
+            <button type="button" className={styles.selectLink} onClick={exitSelecting}>
+              {t('exitSelectMode')}
+            </button>
+          </div>
+          <div className={styles.selectActions}>
+            <Button
+              size="s"
+              variant="outlined"
+              disabled={selectedCount === 0 || batchPending}
+              onClick={toggleBatchPin}
+            >
+              {allSelectedPinned ? t('sessionUnpin') : t('sessionPin')}
+            </Button>
+            <Button
+              size="s"
+              variant="outlined"
+              disabled={selectedCount === 0 || batchPending}
+              onClick={() => setGroupPickerOpen(true)}
+            >
+              {t('groupMoveTo')}
+            </Button>
+            <Button
+              size="s"
+              variant="dangerOutlined"
+              disabled={selectedCount === 0 || batchPending}
+              onClick={() => setBatchDeleteOpen(true)}
+            >
+              {t('delete')}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.bottom}>
+          <button type="button" className={styles.settings} onClick={() => openSettings('general')}>
+            <span className={styles.settingsIcon}>
+              <IconSettingsOutline16 />
+            </span>
+            <span className={styles.settingsLabel}>{t('settings')}</span>
+          </button>
+        </div>
+      )}
       {deleting ? (
         <Modal
           title={t('deleteSessionModalContentTitle')}
@@ -299,6 +486,80 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
           }
         >
           {t('deleteSessionWithFilesDescription')}
+        </Modal>
+      ) : null}
+      {batchDeleteOpen ? (
+        <Modal
+          title={t('batchDeleteTitle', { count: selectedCount })}
+          onClose={() => {
+            if (!batchPending) {
+              setBatchDeleteOpen(false)
+            }
+          }}
+          footer={
+            <>
+              <Button
+                variant="outlined"
+                disabled={batchPending}
+                onClick={() => setBatchDeleteOpen(false)}
+              >
+                {t('cancel')}
+              </Button>
+              <Button variant="danger" disabled={batchPending} onClick={() => void deleteSelected()}>
+                {batchPending ? t('batchDeleting') : t('delete')}
+              </Button>
+            </>
+          }
+        >
+          {t('batchDeleteDescription')}
+        </Modal>
+      ) : null}
+      {groupPickerOpen ? (
+        <Modal
+          title={t('groupMoveTo')}
+          onClose={() => {
+            if (!batchPending) {
+              setGroupPickerOpen(false)
+            }
+          }}
+          footer={
+            <Button variant="outlined" onClick={() => setGroupPickerOpen(false)}>
+              {t('cancel')}
+            </Button>
+          }
+        >
+          <div className={styles.groupPicker}>
+            {sessionGroups.map((group) => (
+              <button
+                key={group.id}
+                type="button"
+                className={styles.groupPickerItem}
+                onClick={() => applyBatchGroup(group.id)}
+              >
+                {group.name}
+              </button>
+            ))}
+            {hasGroupedSelected ? (
+              <button
+                type="button"
+                className={styles.groupPickerItem}
+                onClick={() => applyBatchGroup(null)}
+              >
+                {t('groupUngroup')}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className={clsx(styles.groupPickerItem, styles.groupPickerCreate)}
+              onClick={() => {
+                setGroupPickerOpen(false)
+                setGroupDialog({ id: null, name: '', applyToSelection: true })
+              }}
+            >
+              <IconNewChatOutline16 />
+              {t('groupNew')}
+            </button>
+          </div>
         </Modal>
       ) : null}
       {groupDialog ? (

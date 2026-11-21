@@ -191,7 +191,13 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
             }
           }}
           onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+            // 手机端回车只换行，发送统一走发送按钮；桌面端保持回车发送
+            if (
+              !isMobile &&
+              event.key === 'Enter' &&
+              !event.shiftKey &&
+              !event.nativeEvent.isComposing
+            ) {
               event.preventDefault()
               send()
             }
