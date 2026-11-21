@@ -1,8 +1,8 @@
 {
-  "version": "1.10.2.2",
-  "url": "https://raw.githubusercontent.com/aleksandr233hu/DeepMeow/web-bundles/bundle-1.10.2.2.zip",
-  "urlAlt": "https://cdn.jsdelivr.net/gh/aleksandr233hu/DeepMeow@web-bundles/bundle-1.10.2.2.zip",
-  "checksum": "307f95968be59b228e730da672108543e5c9cedd75d5a14c981a374b5292e6ce",
+  "version": "1.10.2.3",
+  "url": "https://raw.githubusercontent.com/aleksandr233hu/DeepMeow/web-bundles/bundle-1.10.2.3.zip",
+  "urlAlt": "https://cdn.jsdelivr.net/gh/aleksandr233hu/DeepMeow@web-bundles/bundle-1.10.2.3.zip",
+  "checksum": "aee4ba55b29b8c7d7c23142a9ba39098943fa4b80420789c6147d936eca7d5c3",
   "minAppVersion": "1.10.2",
   "notes": ""
 }
