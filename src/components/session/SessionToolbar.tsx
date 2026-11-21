@@ -5,6 +5,7 @@ import { resolvePreset, usePresetStore } from '../../services/presets/store.js'
 import { useSettings } from '../../services/settings.js'
 import {
   compressSession,
+  getLastCompressionError,
   setSessionPinned,
   setSessionPreset,
   type CompressResult,
@@ -48,7 +49,12 @@ export const SessionToolbar = ({
     } else if (result === 'tooShort') {
       showToast({ key: 'compressTooShort', type: 'error' })
     } else if (result === 'failed') {
-      showToast({ key: 'compressFailed', type: 'error' })
+      const detail = getLastCompressionError()
+      showToast(
+        detail
+          ? { key: 'compressFailedDetail', params: { message: detail }, type: 'error' }
+          : { key: 'compressFailed', type: 'error' }
+      )
     }
   }
 

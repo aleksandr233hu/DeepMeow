@@ -81,6 +81,7 @@ export const en = {
   compressDone: 'Earlier messages compressed',
   compressTooShort: 'This chat is too short; at least 4 complete turns are needed.',
   compressFailed: 'Compression failed. Please try again.',
+  compressFailedDetail: 'Compression failed: {message}',
   compressedBadge: 'Compressed',
   compressedHistoryCount: '{count} earlier messages compressed',
   viewSummary: 'View summary',

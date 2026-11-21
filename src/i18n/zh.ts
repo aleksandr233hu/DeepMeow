@@ -78,6 +78,7 @@ export const zh = {
   compressDone: '已压缩较早的会话',
   compressTooShort: '会话还不够长，至少需要 4 轮对话才能压缩',
   compressFailed: '压缩失败，请稍后重试',
+  compressFailedDetail: '压缩失败：{message}',
   compressedBadge: '已压缩',
   compressedHistoryCount: '已压缩 {count} 条较早消息',
   viewSummary: '查看摘要',

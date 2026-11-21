@@ -1104,6 +1104,11 @@ export type CompressResult = 'done' | 'tooShort' | 'failed' | 'busy'
  * 手动压缩较早对话：保留最近三轮，其余交给模型总结后替换进系统提示词。
  * 不改动消息本身，恢复时只清除 compression。
  */
+/** 最近一次压缩失败的原因，供界面显示（不持久化） */
+let lastCompressionError: string | null = null
+
+export const getLastCompressionError = () => lastCompressionError
+
 export const compressSession = async (sessionId: string): Promise<CompressResult> => {
   if (
     get().importingHistory ||
@@ -1130,11 +1135,15 @@ export const compressSession = async (sessionId: string): Promise<CompressResult
     }
     updateSession(sessionId, (current) => ({ ...current, compression, updatedAt: Date.now() }))
     persist(sessionId)
+    lastCompressionError = null
     return 'done'
   } catch (error) {
-    return error instanceof CompressionError && error.reason === 'tooShort'
-      ? 'tooShort'
-      : 'failed'
+    if (error instanceof CompressionError && error.reason === 'tooShort') {
+      lastCompressionError = null
+      return 'tooShort'
+    }
+    lastCompressionError = error instanceof Error ? error.message : String(error)
+    return 'failed'
   } finally {
     compressingSessions.delete(sessionId)
   }
