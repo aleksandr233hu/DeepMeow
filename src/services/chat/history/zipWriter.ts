@@ -39,7 +39,10 @@ const entryName = (name: string) => {
 }
 
 /** STORE 流式写入；成品必须能再次导入。 */
-export const writeArchive = async (entries: { name: string; blob: Blob }[]): Promise<Blob> => {
+export const writeArchive = async (
+  entries: { name: string; blob: Blob }[],
+  onProgress?: (ratio: number) => void
+): Promise<Blob> => {
   if (entries.length >= ZIP64_COUNT) {
     throw new ArchiveLimitError()
   }
@@ -105,6 +108,7 @@ export const writeArchive = async (entries: { name: string; blob: Blob }[]): Pro
         await reader.cancel().catch(() => {})
         reader.releaseLock()
       }
+      onProgress?.(Math.min(1, size / expectedSize))
     }
     zip.end()
     if (!completed || size !== expectedSize) {

@@ -784,7 +784,8 @@ const ImportHistory = ({ disabled }: { disabled: boolean }) => {
 /** 将全部会话及图片导出为 ZIP 文件并下载 */
 const ExportHistory = ({ disabled }: { disabled: boolean }) => {
   const t = useTranslate()
-  const empty = useChatStore((state) => state.sessions.length === 0)
+  const sessionCount = useChatStore((state) => state.sessions.length)
+  const empty = sessionCount === 0
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState<Status>(null)
 
@@ -792,7 +793,23 @@ const ExportHistory = ({ disabled }: { disabled: boolean }) => {
     setBusy(true)
     setStatus(null)
     try {
-      const { name, blob } = await exportHistory()
+      setStatus({
+        key: 'historyExportPreparing',
+        params: { done: 0, total: sessionCount, percent: 0 },
+      })
+      const { name, blob } = await exportHistory({
+        onProgress: (done, total) =>
+          setStatus({
+            key: 'historyExportPreparing',
+            params: {
+              done,
+              total,
+              percent: total > 0 ? Math.round((done / total) * 100) : 0,
+            },
+          }),
+        onZipping: (ratio) =>
+          setStatus({ key: 'historyExportZipping', params: { percent: Math.round(ratio * 100) } }),
+      })
       await saveBlob({
         blob,
         fileName: name,
@@ -822,7 +839,7 @@ const ExportHistory = ({ disabled }: { disabled: boolean }) => {
           onClick={() => void onExport()}
         >
           <IconDownloadOutline16 />
-          {t('exportAllDownload')}
+          {busy ? t('exportInProgress') : t('exportAllDownload')}
         </Button>
       }
     />
@@ -869,7 +886,7 @@ const ExportProfile = ({ disabled }: { disabled: boolean }) => {
           onClick={() => void onExport()}
         >
           <IconDownloadOutline16 />
-          {t('exportAllDownload')}
+          {busy ? t('exportInProgress') : t('exportAllDownload')}
         </Button>
       }
     />

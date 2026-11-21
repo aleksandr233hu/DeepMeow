@@ -12,13 +12,20 @@ const json = (value: unknown) => new Blob([JSON.stringify(value)], { type: 'appl
  * 只写出本地有原件的图片，每个会话目录各写一份；其他附件只有元数据。
  */
 export const exportArchive = async (
-  sessions: Iterable<Session> | AsyncIterable<Session>
+  sessions: Iterable<Session> | AsyncIterable<Session>,
+  hooks?: {
+    /** 每处理完一个会话回调（从 1 开始） */
+    onSession?: (done: number) => void
+    /** 打包 ZIP 时的字节进度 0–1 */
+    onZipping?: (ratio: number) => void
+  }
 ): Promise<Blob> => {
   const manifest: Manifest = { export_format_version: EXPORT_FORMAT_VERSION }
   const entries = [{ name: MANIFEST_PATH, blob: json(manifest) }]
   const imageEntries: { name: string; blob: Blob }[] = []
   const index: SessionIndexEntry[] = []
   const originals = new Map<string, Blob | undefined>()
+  let done = 0
   for await (const session of sessions) {
     for (const message of session.messages) {
       if (message.role === 'user') {
@@ -44,7 +51,9 @@ export const exportArchive = async (
       imageEntries.push({ name, blob })
     }
     index.push(toIndexEntry(data))
+    done += 1
+    hooks?.onSession?.(done)
   }
   entries.push({ name: INDEX_PATH, blob: json(index) })
-  return writeArchive(entries.concat(imageEntries))
+  return writeArchive(entries.concat(imageEntries), hooks?.onZipping)
 }
